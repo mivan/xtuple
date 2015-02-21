@@ -3,10 +3,12 @@
     "context": "xtuple",
     "nameSpace": "XM",
     "type": "Site",
-    "table": "whsinfo",
-    "lockable": true,
+    "table": "xt.site",
     "idSequenceName": "warehous_warehous_id_seq",
-    "comment": "Site Info Map",
+    "isRest": true,
+    "lockable": true,
+    "lockTable": "whsinfo",
+    "comment": "Site Map",
     "privileges": {
       "all": {
         "create": "MaintainWarehouses",
@@ -28,7 +30,9 @@
         "name": "code",
         "attr": {
           "type": "String",
-          "column": "warehous_code"
+          "column": "warehous_code",
+          "isNaturalKey":true,
+          "required": true
         }
       },
       {
@@ -36,7 +40,8 @@
         "toOne": {
           "isNested": true,
           "type": "SiteType",
-          "column": "warehous_sitetype_id"
+          "column": "warehous_sitetype_id",
+          "required": true
         }
       },
       {
@@ -77,24 +82,10 @@
         }
       },
       {
-        "name": "fob",
+        "name": "incoterms",
         "attr": {
           "type": "String",
           "column": "warehous_fob"
-        }
-      },
-      {
-        "name": "shipVia",
-        "attr": {
-          "type": "String",
-          "column": "warehous_shipvia_id"
-        }
-      },
-      {
-        "name": "notes",
-        "attr": {
-          "type": "String",
-          "column": "warehous_shipcomments"
         }
       },
       {
@@ -140,6 +131,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -173,7 +172,8 @@
         "name": "isPublic",
         "attr": {
           "type": "Boolean",
-          "column": "comment_public"
+          "column": "comment_public",
+          "value": true
         }
       },
       {
@@ -197,16 +197,108 @@
   {
     "context": "xtuple",
     "nameSpace": "XM",
+    "type": "SiteZoneRelation",
+    "table": "whsezone",
+    "isRest": true,
+    "comment": "Site Zone List Map",
+    "privileges": {
+      "all": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
+      }
+    },
+    "properties": [
+      {
+        "name": "id",
+        "attr": {
+          "type": "Number",
+          "column": "whsezone_id",
+          "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "site",
+        "toOne": {
+          "type": "SiteRelation",
+          "column": "whsezone_warehous_id"
+        }
+      },
+      {
+        "name": "name",
+        "attr": {
+          "type": "String",
+          "column": "whsezone_name",
+          "isNaturalKey":true
+        }
+      },
+      {
+        "name": "description",
+        "attr": {
+          "type": "String",
+          "column": "whsezone_descrip"
+        }
+      }
+    ],
+    "isSystem": true
+  },
+  {
+    "context": "xtuple",
+    "nameSpace": "XM",
+    "type": "SiteZone",
+    "table": "whsezone",
+    "idSequenceName": "whsezone_whsezone_id_seq",
+    "lockable": true,
+    "comment": "Site Zone Map",
+    "properties": [
+      {
+        "name": "id",
+        "attr": {
+          "type": "Number",
+          "column": "whsezone_id",
+          "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "site",
+        "attr": {
+          "type": "Number",
+          "column": "whsezone_warehous_id"
+        }
+      },
+      {
+        "name": "name",
+        "attr": {
+          "type": "String",
+          "column": "whsezone_name",
+          "isNaturalKey":true
+        }
+      },
+      {
+        "name": "description",
+        "attr": {
+          "type": "String",
+          "column": "whsezone_descrip"
+        }
+      }
+    ],
+    "isNestedOnly": true,
+    "isSystem": true
+  },
+  {
+    "context": "xtuple",
+    "nameSpace": "XM",
     "type": "SiteListItem",
-    "table": "whsinfo",
-    "idSequenceName": "warehous_warehous_id_seq",
+    "table": "xt.site",
+    "isRest": true,
     "comment": "Site Info Map",
     "privileges": {
       "all": {
-        "create": "MaintainWarehouses",
-        "read": "ViewWarehouses",
-        "update": "MaintainWarehouses",
-        "delete": "MaintainWarehouses"
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
       }
     },
     "properties": [
@@ -221,8 +313,9 @@
       {
         "name": "code",
         "attr": {
-          "type": "SiteRelation",
-          "column": "warehous_code"
+          "type": "String",
+          "column": "warehous_code",
+          "isNaturalKey":true
         }
       },
       {
@@ -253,15 +346,15 @@
     "context": "xtuple",
     "nameSpace": "XM",
     "type": "SiteRelation",
-    "table": "whsinfo",
-    "idSequenceName": "warehous_warehous_id_seq",
+    "table": "xt.site",
+    "isRest": true,
     "comment": "Site Info Map",
     "privileges": {
       "all": {
-        "create": "MaintainWarehouses",
-        "read": "ViewWarehouses",
-        "update": "MaintainWarehouses",
-        "delete": "MaintainWarehouses"
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
       }
     },
     "properties": [
@@ -277,7 +370,8 @@
         "name": "code",
         "attr": {
           "type": "String",
-          "column": "warehous_code"
+          "column": "warehous_code",
+          "isNaturalKey":true
         }
       },
       {
@@ -295,7 +389,30 @@
         }
       },
       {
-        "name": "fob",
+        "name": "address",
+        "toOne": {
+          "isNested": true,
+          "type": "AddressInfo",
+          "column": "warehous_addr_id"
+        }
+      },
+      {
+        "name": "contact",
+        "toOne": {
+          "isNested": true,
+          "type": "ContactRelation",
+          "column": "warehous_cntct_id"
+        }
+      },
+      {
+        "name": "taxZone",
+        "toOne": {
+          "type": "TaxZone",
+          "column": "warehous_taxzone_id"
+        }
+      },
+      {
+        "name": "incoterms",
         "attr": {
           "type": "String",
           "column": "warehous_fob"
@@ -309,8 +426,9 @@
     "nameSpace": "XM",
     "type": "SiteType",
     "table": "sitetype",
-    "lockable": true,
+    "isRest": true,
     "idSequenceName": "sitetype_sitetype_id_seq",
+    "lockable": true,
     "comment": "Site Type Map",
     "privileges": {
       "all": {
@@ -333,7 +451,8 @@
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "sitetype_name"
+          "column": "sitetype_name",
+          "isNaturalKey":true
         }
       },
       {

@@ -4,8 +4,10 @@
     "nameSpace": "XM",
     "type": "Quote",
     "table": "xt.quheadinfo",
-    "lockable": true,
+    "isRest": true,
     "idSequenceName": "quhead_quhead_id_seq",
+    "lockable": true,
+    "lockTable": "quhead",
     "comment": "Quote Map",
     "privileges": {
       "all": {
@@ -13,7 +15,20 @@
         "read": "ViewQuotes",
         "update": "MaintainQuotes",
         "delete": "MaintainQuotes"
-      }   
+      },
+      "attribute": {
+        "margin": {
+          "view": "ShowMarginsOnSalesOrder"
+        },
+        "quoteDate": {
+          "create": "OverrideSODate",
+          "update": "OverrideSODate"
+        },
+        "packDate": {
+          "create": "AlterPackDate",
+          "update": "AlterPackDate"
+        }
+      }
     },
     "properties": [
       {
@@ -28,7 +43,8 @@
         "name": "number",
         "attr": {
           "type": "String",
-          "column": "quhead_number"
+          "column": "quhead_number",
+          "isNaturalKey":true
         }
       },
       {
@@ -36,14 +52,23 @@
         "toOne": {
           "isNested": true,
           "type": "CustomerProspectRelation",
-          "column": "quhead_cust_id"
+          "column": "quhead_cust_id",
+          "required": true
         }
+      },
+      {
+        "name": "customerPurchaseOrderNumber",
+        "attr": {
+          "type": "String",
+          "column": "quhead_custponumber"
+         }
       },
       {
         "name": "quoteDate",
         "attr": {
           "type": "Date",
-          "column": "quhead_quotedate"
+          "column": "quhead_quotedate",
+          "required": true
         }
       },
       {
@@ -56,7 +81,7 @@
       {
         "name": "scheduleDate",
         "attr": {
-          "type": "Date",
+          "type": "DueDate",
           "column": "schedule_date"
         }
       },
@@ -64,20 +89,22 @@
         "name": "terms",
         "toOne": {
           "type": "Terms",
-          "column": "quhead_terms_id"
+          "column": "quhead_terms_id",
+          "required": true
         }
       },
       {
         "name": "salesRep",
         "toOne": {
           "type": "SalesRep",
-          "column": "quhead_salesrep_id"
+          "column": "quhead_salesrep_id",
+          "required": true
         }
       },
       {
         "name": "commission",
         "attr": {
-          "type": "Number",
+          "type": "Percent",
           "column": "quhead_commission"
         }
       },
@@ -91,7 +118,7 @@
       {
         "name": "site",
         "toOne": {
-          "type": "SiteRelation",
+          "type": "Site",
           "column": "quhead_warehous_id"
         }
       },
@@ -417,7 +444,8 @@
         "name": "calculateFreight",
         "attr": {
           "type": "Boolean",
-          "column": "quhead_calcfreight"
+          "column": "quhead_calcfreight",
+          "required": true
         }
       },
       {
@@ -430,7 +458,7 @@
       {
         "name": "margin",
         "attr": {
-          "type": "Number",
+          "type": "Percent",
           "column": "margin"
         }
       },
@@ -447,7 +475,7 @@
           "type": "Number",
           "column": "subtotal"
         }
-      }, 
+      },
       {
         "name": "taxTotal",
         "attr": {
@@ -468,14 +496,14 @@
           "type": "Number",
           "column": "quhead_freight"
         }
-      },   
+      },
       {
         "name": "total",
         "attr": {
           "type": "Number",
           "column": "total"
         }
-      },  
+      },
       {
         "name": "lineItems",
         "toMany": {
@@ -491,7 +519,8 @@
           "isNested": true,
           "type": "QuoteComment",
           "column": "quhead_id",
-          "inverse": "source"
+          "inverse": "source",
+          "required": true
         }
       },
       {
@@ -560,6 +589,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -606,7 +643,7 @@
     "nameSpace": "XM",
     "type": "QuoteComment",
     "table": "comment",
-    "idSequenceName": "quhead_quhead_id_seq",
+    "idSequenceName": "comment_comment_id_seq",
     "comment": "Quote Comment Map",
     "privileges": {
       "all": {
@@ -632,6 +669,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -650,7 +695,8 @@
         "name": "commentType",
         "toOne": {
           "type": "CommentType",
-          "column": "comment_cmnttype_id"
+          "column": "comment_cmnttype_id",
+          "required": true
         }
       },
       {
@@ -658,13 +704,14 @@
         "attr": {
           "type": "String",
           "column": "comment_text"
-        } 
+        }
       },
-      { 
+      {
         "name": "isPublic",
         "attr": {
           "type": "Boolean",
-          "column": "comment_public"
+          "column": "comment_public",
+          "value": true
         }
       },
       {
@@ -707,6 +754,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -776,6 +831,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -842,6 +905,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -888,6 +959,7 @@
     "nameSpace": "XM",
     "type": "QuoteLine",
     "table": "xt.quiteminfo",
+    "isRest": true,
     "idSequenceName": "quitem_quitem_id_seq",
     "comment": "Quote Line Item Map",
     "privileges": {
@@ -896,6 +968,21 @@
         "read": "ViewQuotes",
         "update": "MaintainQuotes",
         "delete": "MaintainQuotes"
+      },
+      "attribute": {
+        "taxType": {
+          "create": "OverrideTax",
+          "update": "OverrideTax"
+        },
+        "margin": {
+          "view": "ShowMarginsOnSalesOrder"
+        },
+        "unitCost": {
+          "view": "ViewCosts"
+        },
+        "markup": {
+          "view": "ViewCosts"
+        }
       }
     },
     "properties": [
@@ -908,80 +995,113 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "quote",
         "attr": {
           "type": "Number",
-          "column": "quitem_quhead_id"
+          "column": "quitem_quhead_id",
+          "required": true
         }
       },
       {
         "name": "lineNumber",
         "attr": {
           "type": "Number",
-          "column": "quitem_linenumber"
+          "column": "quitem_linenumber",
+          "required": true
         }
       },
       {
-        "name": "itemSite",
+        "name": "item",
         "toOne": {
-          "type": "ItemSiteRelation",
-          "column": "quitem_itemsite_id"
+          "type": "ItemRelation",
+          "column": "quitem_item_id",
+          "isNested": true,
+          "required": true
+        }
+      },
+      {
+        "name": "site",
+        "toOne": {
+          "type": "SiteRelation",
+          "column": "quitem_order_warehous_id",
+          "isNested": true
+        }
+      },
+      {
+        "name": "unitCost",
+        "attr": {
+          "type": "Cost",
+          "column": "quitem_unitcost"
         }
       },
       {
         "name": "quantity",
         "attr": {
-          "type": "Number",
-          "column": "quitem_qtyord"
+          "type": "Quantity",
+          "column": "quitem_qtyord",
+          "required": true
         }
       },
       {
         "name": "quantityUnit",
         "toOne": {
           "type": "Unit",
-          "column": "quitem_qty_uom_id"
+          "column": "quitem_qty_uom_id",
+          "required": true
         }
       },
       {
         "name": "quantityUnitRatio",
         "attr": {
-          "type": "Number",
-          "column": "quitem_qty_invuomratio"
+          "type": "UnitRatio",
+          "column": "quitem_qty_invuomratio",
+          "required": true
         }
       },
       {
         "name": "basePrice",
         "attr": {
-          "type": "Number",
+          "type": "SalesPrice",
           "column": "base_price"
         }
       },
       {
         "name": "customerPrice",
         "attr": {
-          "type": "Number",
-          "column": "quitem_custprice"
+          "type": "SalesPrice",
+          "column": "quitem_custprice",
+          "required": true
         }
       },
       {
         "name": "discount",
         "attr": {
-          "type": "Number",
+          "type": "Percent",
           "column": "cust_discount"
         }
       },
       {
         "name": "price",
         "attr": {
-          "type": "Number",
-          "column": "quitem_price"
+          "type": "SalesPrice",
+          "column": "quitem_price",
+          "required": true
         }
       },
       {
         "name": "scheduleDate",
         "attr": {
-          "type": "Date",
-          "column": "quitem_scheddate"
+          "type": "DueDate",
+          "column": "quitem_scheddate",
+          "required": true
         }
       },
       {
@@ -992,23 +1112,23 @@
         }
       },
       {
-        "name": "listCostMarkup",
+        "name": "markup",
         "attr": {
-          "type": "Number",
-          "column": "list_cost_markup"
+          "type": "Percent",
+          "column": "markup"
         }
       },
       {
         "name": "listPrice",
         "attr": {
-          "type": "Number",
+          "type": "Money",
           "column": "list_price"
         }
       },
       {
         "name": "listPriceDiscount",
         "attr": {
-          "type": "Number",
+          "type": "Percent",
           "column": "list_price_discount"
         }
       },
@@ -1023,35 +1143,30 @@
         "name": "priceUnit",
         "toOne": {
           "type": "Unit",
-          "column": "quitem_price_uom_id"
+          "column": "quitem_price_uom_id",
+          "required": true
         }
       },
       {
         "name": "priceUnitRatio",
         "attr": {
-          "type": "Number",
-          "column": "quitem_price_invuomratio"
-        }
-      },
-      {
-        "name": "priceMode",
-        "attr": {
-          "type": "String",
-          "column": "quitem_pricemode"
+          "type": "UnitRatio",
+          "column": "quitem_price_invuomratio",
+          "required": true
         }
       },
       {
         "name": "extendedPrice",
         "attr": {
-          "type": "Number",
+          "type": "ExtendedPrice",
           "column": "ext_price"
         }
       },
       {
-        "name": "profit",
+        "name": "margin",
         "attr": {
-          "type": "String",
-          "column": "profit"
+          "type": "Percent",
+          "column": "margin"
         }
       },
       {
@@ -1064,7 +1179,7 @@
       {
         "name": "tax",
         "attr": {
-          "type": "String",
+          "type": "Number",
           "column": "tax"
         }
       },
@@ -1121,6 +1236,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "targetType",
         "attr": {
           "type": "String",
@@ -1153,7 +1276,7 @@
       {
         "name": "price",
         "attr": {
-          "type": "Number",
+          "type": "Money",
           "column": "charass_price"
         }
       }
@@ -1192,6 +1315,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -1225,7 +1356,8 @@
         "name": "isPublic",
         "attr": {
           "type": "Boolean",
-          "column": "comment_public"
+          "column": "comment_public",
+          "value": true
         }
       },
       {
@@ -1251,6 +1383,7 @@
     "nameSpace": "XM",
     "type": "QuoteListItem",
     "table": "xt.quheadinfo",
+    "isRest": true,
     "comment": "Quote List Item Map",
     "privileges": {
       "all": {
@@ -1273,7 +1406,8 @@
         "name": "number",
         "attr": {
           "type": "String",
-          "column": "quhead_number"
+          "column": "quhead_number",
+          "isNaturalKey":true
         }
       },
       {
@@ -1334,6 +1468,41 @@
          }
       },
       {
+        "name": "salesRep",
+        "toOne": {
+          "type": "SalesRep",
+          "column": "quhead_salesrep_id"
+        }
+      },
+      {
+        "name": "billtoName",
+        "attr": {
+          "type": "String",
+          "column": "quhead_billtoname"
+        }
+      },
+      {
+        "name": "billtoCity",
+        "attr": {
+          "type": "String",
+          "column": "quhead_billtocity"
+        }
+      },
+      {
+        "name": "billtoState",
+        "attr": {
+          "type": "String",
+          "column": "quhead_billtostate"
+        }
+      },
+      {
+        "name": "billtoCountry",
+        "attr": {
+          "type": "String",
+          "column": "quhead_billtocountry"
+        }
+      },
+      {
         "name": "shiptoName",
         "attr": {
           "type": "String",
@@ -1341,10 +1510,24 @@
         }
       },
       {
-        "name": "shiptoAddress1",
+        "name": "shiptoCity",
         "attr": {
           "type": "String",
-          "column": "quhead_shiptoaddress1"
+          "column": "quhead_shiptocity"
+        }
+      },
+      {
+        "name": "shiptoState",
+        "attr": {
+          "type": "String",
+          "column": "quhead_shiptostate"
+        }
+      },
+      {
+        "name": "shiptoCountry",
+        "attr": {
+          "type": "String",
+          "column": "quhead_shiptocountry"
         }
       }
     ],
@@ -1354,8 +1537,8 @@
     "context": "xtuple",
     "nameSpace": "XM",
     "type": "QuoteRelation",
-    "table": "quhead",
-    "idSequenceName": "quhead_quhead_id_seq",
+    "table": "xt.quheadinfo",
+    "isRest": true,
     "comment": "Quote Relation Map",
     "privileges": {
       "all": {
@@ -1375,11 +1558,25 @@
         }
       },
       {
+        "name": "number",
+        "attr": {
+          "type": "String",
+          "column": "quhead_number",
+          "isNaturalKey":true
+        }
+      },
+      {
         "name": "customer",
-        "toOne": {
-          "isNested": true,
-          "type": "CustomerProspectRelation",
-          "column": "quhead_cust_id"
+        "attr": {
+          "type": "String",
+          "column": "cust_number"
+        }
+      },
+      {
+        "name": "quoteDate",
+        "attr": {
+          "type": "Date",
+          "column": "quhead_quotedate"
         }
       },
       {
@@ -1390,10 +1587,17 @@
         }
       },
       {
+        "name": "total",
+        "attr": {
+          "type": "Money",
+          "column": "total"
+        }
+      },
+      {
         "name": "opportunity",
         "attr": {
-          "type": "Number",
-          "column": "quhead_ophead_id"
+          "type": "String",
+          "column": "ophead_number"
         }
       }
     ],
@@ -1421,6 +1625,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {

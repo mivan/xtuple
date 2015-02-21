@@ -1,5 +1,5 @@
-/*jshint indent:2, curly:true eqeqeq:true, immed:true, latedef:true,
-newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true
+/*jshint indent:2, curly:true, eqeqeq:true, immed:true, latedef:true,
+newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true,
 white:true*/
 /*global XT:true, XM:true, Backbone:true, _:true, console:true */
 
@@ -28,7 +28,6 @@ white:true*/
     @class
 
     @extends XM.Document
-    @extends XM.AddressCheckMixin
   */
   XM.Contact = XM.Document.extend({
     /** @scope XM.Contact.prototype */
@@ -41,7 +40,8 @@ white:true*/
 
     defaults: function () {
       return {
-        isActive: true
+        isActive: true,
+        owner: XM.currentUser
       };
     },
 
@@ -67,20 +67,18 @@ white:true*/
       return name.join(' ');
     },
 
-    validateSave: function (attributes, options) {
+    validate: function (attributes, options) {
       if (!attributes.firstName && !attributes.lastName) {
         return XT.Error.clone('xt2004');
       }
+      return XM.Document.prototype.validate.apply(this, arguments);
     }
 
   });
-  
-  XM.Contact.used = function (id, options) {
-    return XT.dataSource.dispatch('XM.Contact', 'used', id, options);
-  };
 
-  // Add mixin
-  XM.Contact = XM.Contact.extend(XM.AddressCheckMixin);
+  XM.Contact.used = function (id, options) {
+    return XM.ModelMixin.dispatch('XM.Contact', 'used', id, options);
+  };
 
   /**
     @class
@@ -90,11 +88,7 @@ white:true*/
   XM.ContactEmail = XM.Model.extend({
     /** @scope XM.ContactEmail.prototype */
 
-    recordType: 'XM.ContactEmail',
-
-    requiredAttributes: [
-      "email"
-    ]
+    recordType: 'XM.ContactEmail'
 
   });
 
@@ -120,7 +114,9 @@ white:true*/
   XM.ContactCharacteristic = XM.CharacteristicAssignment.extend({
     /** @scope XM.ContactCharacteristic.prototype */
 
-    recordType: 'XM.ContactCharacteristic'
+    recordType: 'XM.ContactCharacteristic',
+
+    which: 'isContacts'
 
   });
 
@@ -225,7 +221,7 @@ white:true*/
     editableModel: 'XM.Contact'
 
   });
-  
+
   /**
     @class
 
@@ -247,8 +243,7 @@ white:true*/
 
     @extends XM.Collection
   */
-  XM.HonorificCollection = XM.Collection.extend({
-    /** @scope XM.HonorificCollection.prototype */
+  XM.HonorificCollection = XM.Collection.extend(/** @lends XM.HonorificCollection.prototype */{
 
     model: XM.Honorific
 

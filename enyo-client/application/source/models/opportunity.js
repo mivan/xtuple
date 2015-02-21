@@ -1,5 +1,5 @@
-/*jshint indent:2, curly:true eqeqeq:true, immed:true, latedef:true,
-newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true
+/*jshint indent:2, curly:true, eqeqeq:true, immed:true, latedef:true,
+newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true,
 white:true*/
 /*global XT:true, XM:true, Backbone:true, _:true, console:true */
 
@@ -34,11 +34,7 @@ white:true*/
 
     defaults: {
       deactivate: false
-    },
-
-    requiredAttributes: [
-      "deactivate"
-    ]
+    }
 
   });
 
@@ -71,25 +67,17 @@ white:true*/
     defaults: function () {
       return {
         owner: XM.currentUser,
-        isActive: true
+        isActive: true,
+        currency: XT.baseCurrency()
       };
     },
-
-    requiredAttributes: [
-      "account",
-      "name",
-      "isActive",
-      "opportunityStage",
-      "opportunitySource",
-      "opportunityType"
-    ],
 
     // ..........................................................
     // METHODS
     //
 
-    initialize: function () {
-      XM.Document.prototype.initialize.apply(this, arguments);
+    bindEvents: function () {
+      XM.Document.prototype.bindEvents.apply(this, arguments);
       this.on('change:assignedTo', this.assignedToDidChange);
     },
 
@@ -125,12 +113,14 @@ white:true*/
   /**
     @class
 
-    @extends XM.Characteristic
+    @extends XM.CharacteristicAssignment
   */
   XM.OpportunityCharacteristic = XM.CharacteristicAssignment.extend({
     /** @scope XM.OpportunityCharacteristic.prototype */
 
-    recordType: 'XM.OpportunityCharacteristic'
+    recordType: 'XM.OpportunityCharacteristic',
+
+    which: 'isOpportunities'
 
   });
 
@@ -247,7 +237,7 @@ white:true*/
     editableModel: 'XM.Opportunity'
 
   });
-  
+
   /**
     @class
 

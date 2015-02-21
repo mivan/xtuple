@@ -1,6 +1,6 @@
-/*jshint bitwise:true, indent:2, curly:true eqeqeq:true, immed:true,
+/*jshint bitwise:true, indent:2, curly:true, eqeqeq:true, immed:true,
 latedef:true, newcap:true, noarg:true, regexp:true, undef:true,
-trailing:true white:true*/
+trailing:true, white:true, strict:false*/
 /*global XT:true, XM:true, XV:true, _:true, window: true, enyo:true, Globalize:true*/
 
 (function () {
@@ -90,6 +90,69 @@ trailing:true white:true*/
   });
 
   // ..........................................................
+  // CREDIT CARDS
+  //
+
+  enyo.kind({
+    name: "XV.CreditCardListRelations",
+    kind: "XV.ListRelations",
+    published: {
+      suppressInactive: false
+    },
+    parentKey: "customer",
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableColumns", components: [
+          {kind: "XV.ListColumn", classes: "short", fit: true, components: [
+            {kind: "XV.ListAttr", attr: "name"}
+          ]},
+          {kind: "XV.ListColumn", components: [
+            {kind: "XV.ListAttr", attr: "number", classes: "bold"}
+          ]}
+        ]}
+      ]}
+    ],
+    setupItem: function (inSender, inEvent) {
+      var index = inEvent.index,
+        model = this.readyModels()[index],
+        isActive = model ? model.getValue('isActive') : false,
+        isNotActive = _.isBoolean(isActive) ? !isActive : false;
+      if (!model) { return; }
+
+      this.inherited(arguments);
+
+      if (this.getSuppressInactive()) {
+        this.$.listItem.setShowing(!isNotActive);
+      }
+    }
+  });
+
+  // ..........................................................
+  // CUSTOMER GROUP CUSTOMER
+  //
+
+  enyo.kind({
+    name: "XV.CustomerGroupCustomerListRelations",
+    kind: "XV.ListRelations",
+    orderBy: [
+      {attribute: "customer.number"}
+    ],
+    parentKey: "customerGroup",
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableRows", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "customer.number", classes: "bold"},
+              {kind: "XV.ListAttr", attr: "customer.name", fit: true}
+            ]}
+          ]}
+        ]}
+      ]}
+    ]
+  });
+
+  // ..........................................................
   // CUSTOMER SHIPTO
   //
 
@@ -97,6 +160,9 @@ trailing:true white:true*/
     name: "XV.CustomerShipToListRelations",
     kind: "XV.ListRelations",
     parentKey: "customer",
+    orderBy: [
+      {attribute: "number"}
+    ],
     components: [
       {kind: "XV.ListItem", components: [
         {kind: "FittableColumns", components: [
@@ -113,6 +179,246 @@ trailing:true white:true*/
           {kind: "XV.ListColumn", classes: "last", fit: true, components: [
             {kind: "XV.ListAttr", attr: "contact.name", classes: "italic"},
             {kind: "XV.ListAttr", attr: "address.formatShort"}
+          ]}
+        ]}
+      ]}
+    ]
+  });
+
+  // ..........................................................
+  // EMPLOYEE GROUP EMPLOYEE
+  //
+
+  enyo.kind({
+    name: "XV.EmployeeGroupEmployeeListRelations",
+    kind: "XV.ListRelations",
+    orderBy: [
+      {attribute: "employee.code"}
+    ],
+    parentKey: "employeeGroup",
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableRows", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "employee.code", classes: "bold"},
+              {kind: "XV.ListAttr", attr: "employee.name", fit: true}
+            ]}
+          ]}
+        ]}
+      ]}
+    ]
+  });
+
+  // ..........................................................
+  // EMPLOYEE GROUP GROUP
+  //
+
+  enyo.kind({
+    name: "XV.EmployeeGroupGroupListRelations",
+    kind: "XV.ListRelations",
+    orderBy: [
+      {attribute: "employeeGroup.name"}
+    ],
+    parentKey: "employee",
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableRows", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "employeeGroup.name", classes: "bold"},
+              {kind: "XV.ListAttr", attr: "employeeGroup.description", fit: true}
+            ]}
+          ]}
+        ]}
+      ]}
+    ]
+  });
+
+  // ..........................................................
+  // INVOICE ALLOCATION
+  //
+
+  enyo.kind({
+    name: "XV.InvoiceAllocationListRelations",
+    kind: "XV.ListRelations",
+    parentKey: "invoice",
+    orderBy: [
+      {attribute: "uuid"}
+    ],
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableColumns", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "FittableColumns", components: [
+                {kind: "XV.ListAttr", attr: "amount"}
+              ]}
+            ]},
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "currency"}
+            ]}
+          ]}
+        ]}
+      ]}
+    ]
+  });
+
+  // ..........................................................
+  // INVOICE LINE
+  //
+
+  enyo.kind({
+    name: "XV.InvoiceLineItemListRelations",
+    kind: "XV.ListRelations",
+    parentKey: "invoice",
+    orderBy: [
+      {attribute: "lineNumber"}
+    ],
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableColumns", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "FittableColumns", components: [
+                {kind: "XV.ListAttr", attr: "lineNumber", isKey: true}
+              ]}
+            ]},
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "item.number"},
+              {kind: "XV.ListAttr", attr: "site.code"}
+            ]}
+          ]},
+          {kind: "XV.ListColumn", classes: "last", fit: true, components: [
+            {kind: "XV.ListAttr", attr: "quantity", formatter: "formatQuantity"},
+            {kind: "XV.ListAttr", attr: "billed", formatter: "formatBilled"}
+          ]}
+        ]}
+      ]}
+    ],
+    formatBilled: function (value) {
+      return "_billed".loc() + ": " + value;
+    },
+    formatQuantity: function (value) {
+      return "_quantity".loc() + ": " + value;
+    },
+  });
+
+  // ..........................................................
+  // INVOICE LINE TAX
+  //
+
+  enyo.kind({
+    name: "XV.InvoiceLineTaxListRelations",
+    kind: "XV.ListRelations",
+    parentKey: "parent",
+    orderBy: [
+      {attribute: "uuid"}
+    ],
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableRows", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "taxCode.code"},
+              {kind: "XV.ListAttr", attr: "taxType.name", fit: true, classes: "right"}
+            ]},
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "amount"}
+            ]}
+          ]}
+        ]}
+      ]}
+    ]
+  });
+
+  // ..........................................................
+  // INVOICE TAX
+  // Summarized read-only models of line item taxes
+
+  enyo.kind({
+    name: "XV.InvoiceTaxListRelations",
+    kind: "XV.ListRelations",
+    parentKey: "invoice",
+    orderBy: [
+      {attribute: "uuid"}
+    ],
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableRows", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "type"},
+              {kind: "XV.ListAttr", attr: "code", classes: "right"},
+            ]},
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "amount", formatter: "formatPrice"}
+            ]}
+          ]}
+        ]}
+      ]}
+    ],
+    formatPrice: function (value, view, model) {
+      var currency = model.get("currency"),
+        scale = XT.locale.salesPriceScale;
+      return currency ? currency.format(value, scale) : "";
+    }
+  });
+
+  // ..........................................................
+  // INVOICE TAX ADJUSTMENT
+  //
+
+  enyo.kind({
+    name: "XV.InvoiceTaxAdjustmentListRelations",
+    kind: "XV.ListRelations",
+    parentKey: "invoice",
+    orderBy: [
+      {attribute: "uuid"}
+    ],
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableRows", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "taxCode.code"},
+            ]},
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "amount", formatter: "formatPrice"}
+            ]}
+          ]}
+        ]}
+      ]}
+    ],
+    formatPrice: function (value, view, model) {
+      var parent = model.getParent(),
+        currency = parent ? parent.get("currency") : false,
+        scale = XT.locale.salesPriceScale;
+      return currency ? currency.format(value, scale) : "";
+    }
+  });
+
+  // ..........................................................
+  // ITEM ALIAS
+  //
+
+  enyo.kind({
+    name: "XV.ItemAliasListRelations",
+    kind: "XV.ListRelations",
+    parentKey: "item",
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableColumns", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "aliasNumber", classes: "bold"},
+              {kind: "XV.ListAttr", attr: "account.number",
+                classes: "right", placeholder: "_allAccounts".loc()}
+            ]},
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "description1",
+                placeholder: "_noDescription".loc()}
+            ]}
           ]}
         ]}
       ]}
@@ -164,77 +470,6 @@ trailing:true white:true*/
         ]}
       ]}
     ]
-  });
-
- // ..........................................................
-  // PROJECT
-  //
-
-  enyo.kind({
-    name: "XV.ProjectTaskListRelations",
-    kind: "XV.ListRelations",
-    orderBy: [
-      {attribute: "number"}
-    ],
-    parentKey: "project",
-    components: [
-      {kind: "XV.ListItem", components: [
-        {kind: "FittableColumns", components: [
-          {kind: "XV.ListColumn", classes: "first", components: [
-            {kind: "FittableColumns", components: [
-              {kind: "XV.ListAttr", attr: "number", classes: "bold"},
-              {kind: "XV.ListAttr", attr: "dueDate", fit: true,
-                formatter: "formatDueDate",
-                classes: "right"}
-            ]},
-            {kind: "XV.ListAttr", attr: "name"}
-          ]},
-          {kind: "XV.ListColumn", classes: "third",
-            components: [
-            {kind: "XV.ListAttr", attr: "getProjectStatusString"},
-            {kind: "XV.ListAttr", attr: "owner.username"}
-          ]},
-          {kind: "XV.ListColumn", style: "width: 80;",
-            components: [
-            {content: "_budgeted".loc() + ":", classes: "xv-list-attr",
-              style: "text-align: right;"},
-            {content: "_actual".loc() + ":", classes: "xv-list-attr",
-              style: "text-align: right;"},
-            {content: "_balance".loc() + ":", classes: "xv-list-attr",
-              style: "text-align: right;"}
-          ]},
-          {kind: "XV.ListColumn", classes: "money", components: [
-            {kind: "XV.ListAttr", attr: "budgetedExpenses",
-              classes: "text-align-right", formatter: "formatExpenses"},
-            {kind: "XV.ListAttr", attr: "actualExpenses",
-              classes: "text-align-right", formatter: "formatExpenses"},
-            {kind: "XV.ListAttr", attr: "balanceExpenses",
-              classes: "text-align-right", formatter: "formatBalanceExpenses"}
-          ]},
-          {kind: "XV.ListColumn", classes: "money", fit: true, components: [
-            {kind: "XV.ListAttr", attr: "budgetedHours",
-              classes: "text-align-right", formatter: "formatHours"},
-            {kind: "XV.ListAttr", attr: "actualHours",
-              classes: "text-align-right", formatter: "formatHours"},
-            {kind: "XV.ListAttr", attr: "balanceHours",
-              classes: "text-align-right", formatter: "formatBalanceHours"}
-          ]}
-        ]}
-      ]}
-    ],
-    formatBalanceExpenses: function (value, view, model) {
-      var actual = model.get('actualExpenses'),
-        budget = model.get('budgetedExpenses');
-      return this.formatExpenses(budget - actual, view);
-    },
-    formatBalanceHours: function (value, view, model) {
-      var actual = model.get('actualHours'),
-        budget = model.get('budgetedHours');
-      return this.formatHours(budget - actual, view);
-    },
-    formatDueDate: XV.ProjectList.prototype.formatDueDate,
-    formatHours: XV.ProjectList.prototype.formatHours,
-    formatExpenses: XV.ProjectList.prototype.formatExpenses
   });
 
   // ..........................................................
@@ -298,6 +533,56 @@ trailing:true white:true*/
   });
 
   // ..........................................................
+  // ITEM GROUP ITEM
+  //
+
+  enyo.kind({
+    name: "XV.ItemGroupItemListRelations",
+    kind: "XV.ListRelations",
+    orderBy: [
+      {attribute: "item.number"}
+    ],
+    parentKey: "itemGroup",
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableRows", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "item.number", classes: "bold"},
+              {kind: "XV.ListAttr", attr: "item.description1", classes: "right"}
+            ]}
+          ]}
+        ]}
+      ]}
+    ]
+  });
+
+  // ..........................................................
+  // LOCATION ITEM
+  //
+
+  enyo.kind({
+    name: "XV.LocationItemListRelations",
+    kind: "XV.ListRelations",
+    orderBy: [
+      {attribute: 'item.number'}
+    ],
+    parentKey: "location",
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableColumns", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "item.number", classes: "bold"},
+              {kind: "XV.ListAttr", attr: "item.description1", classes: "right"}
+            ]}
+          ]}
+        ]}
+      ]}
+    ]
+  });
+
+  // ..........................................................
   // QUOTE LINE ITEM
   //
 
@@ -314,18 +599,18 @@ trailing:true white:true*/
           {kind: "XV.ListColumn", classes: "first", components: [
             {kind: "FittableColumns", components: [
               {kind: "XV.ListAttr", attr: "lineNumber", classes: "bold"},
-              {kind: "XV.ListAttr", attr: "itemSite.site.code",
+              {kind: "XV.ListAttr", attr: "site.code",
                 classes: "right"},
-              {kind: "XV.ListAttr", attr: "itemSite.item.number", fit: true}
+              {kind: "XV.ListAttr", attr: "item.number", fit: true}
             ]},
-            {kind: "XV.ListAttr", attr: "itemSite.item.description1",
+            {kind: "XV.ListAttr", attr: "item.description1",
               fit: true,  style: "text-indent: 18px;"}
           ]},
           {kind: "XV.ListColumn", classes: "money", components: [
             {kind: "XV.ListAttr", attr: "quantity",
-              formatter: "formatQuantity", style: "text-align: right"},
+              style: "text-align: right"},
             {kind: "XV.ListAttr", attr: "price",
-              formatter: "formatPrice", style: "text-align: right"}
+              style: "text-align: right"}
           ]},
           {kind: "XV.ListColumn", classes: "money", components: [
             {kind: "XV.ListAttr", attr: "quantityUnit.name"},
@@ -335,33 +620,119 @@ trailing:true white:true*/
             {kind: "XV.ListAttr", attr: "scheduleDate",
               style: "text-align: right"},
             {kind: "XV.ListAttr", attr: "extendedPrice",
-              style: "text-align: right", formatter: "formatExtendedPrice"}
+              style: "text-align: right"}
+          ]}
+        ]}
+      ]}
+    ]
+  });
+
+  // ..........................................................
+  // RETURN LINE
+  //
+
+  enyo.kind({
+    name: "XV.ReturnLineItemListRelations",
+    kind: "XV.ListRelations",
+    parentKey: "return",
+    orderBy: [
+      {attribute: "lineNumber"}
+    ],
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableColumns", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "FittableColumns", components: [
+                {kind: "XV.ListAttr", attr: "lineNumber", isKey: true}
+              ]}
+            ]},
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "item.number"},
+              {kind: "XV.ListAttr", attr: "site.code"}
+            ]}
+          ]},
+          {kind: "XV.ListColumn", classes: "last", fit: true, components: [
+            {kind: "XV.ListAttr", attr: "quantity", formatter: "formatQuantity"},
+            {kind: "XV.ListAttr", attr: "credited", formatter: "formatCredited"}
           ]}
         ]}
       ]}
     ],
-    formatExtendedPrice: function (value, view, model) {
-      var parent = model.getParent(),
-        currency = parent ? parent.get("currency") : false,
-        scale = XT.session.locale.attributes.extendedPriceScale;
-      return currency ? currency.format(value, scale) : "";
+    formatCredited: function (value) {
+      return "_credited".loc() + ": " + value;
     },
-    formatPercentage: function (value, view, model) {
-      var parent = model.getParent(),
-        currency = parent ? parent.get("currency") : false,
-        scale = XT.session.locale.attributes.percentPriceScale;
-      return currency ? currency.format(value, scale) : "";
+    formatQuantity: function (value) {
+      return "_quantity".loc() + ": " + value;
     },
-    formatPrice: function (value, view, model) {
-      var parent = model.getParent(),
-        currency = parent ? parent.get("currency") : false,
-        scale = XT.session.locale.attributes.salesPriceScale;
-      return currency ? currency.format(value, scale) : "";
-    },
-    formatQuantity: function (value, view, model) {
-      var scale = XT.session.locale.attributes.quantityScale;
-      return Globalize.format(value, "n" + scale);
-    }
+  });
+
+  // ..........................................................
+  // RETURN TAX
+  // Summarized read-only models of line item taxes
+
+  enyo.kind({
+    name: "XV.ReturnTaxListRelations",
+    kind: "XV.InvoiceTaxListRelations",
+    parentKey: "return"
+  });
+
+  // ..........................................................
+  // RETURN TAX ADJUSTMENT
+  //
+
+  enyo.kind({
+    name: "XV.ReturnTaxAdjustmentListRelations",
+    kind: "XV.InvoiceTaxAdjustmentListRelations",
+    parentKey: "return"
+  });
+
+  // ..........................................................
+  // SALES ORDER LINE ITEM
+  //
+
+  enyo.kind({
+    name: "XV.SalesOrderLineItemListRelations",
+    kind: "XV.QuoteLineItemListRelations",
+    parentKey: "salesOrder"
+  });
+
+  // ..........................................................
+  // SALES ORDER AND SALE TYPE WORKFLOW
+  //
+
+  enyo.kind({
+    name: "XV.WorkflowListRelations",
+    kind: "XV.ListRelations",
+    orderBy: [
+      {attribute: "sequence"}
+    ],
+    components: [
+      {kind: "XV.ListItem", components: [
+        {kind: "FittableColumns", components: [
+          {kind: "XV.ListColumn", classes: "first", components: [
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "name", classes: "bold"}
+            ]},
+            {kind: "FittableColumns", components: [
+              {kind: "XV.ListAttr", attr: "description"}
+            ]}
+          ]}
+        ]}
+      ]}
+    ]
+  });
+
+  enyo.kind({
+    name: "XV.SalesOrderWorkflowListRelations",
+    kind: "XV.WorkflowListRelations",
+    parentKey: "salesOrder"
+  });
+
+  enyo.kind({
+    name: "XV.SaleTypeWorkflowListRelations",
+    kind: "XV.WorkflowListRelations",
+    parentKey: "saleType"
   });
 
 }());

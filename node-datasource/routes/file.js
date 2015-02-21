@@ -4,15 +4,16 @@ regexp:true, undef:true, strict:true, trailing:true, white:true */
 
 (function () {
   "use strict";
-
-  var retrieveEngine = require('./data').retrieveEngine;
-  // /file?recordType=XM.File&id=40
-
+  
   /**
-    Used to serve up files to the client. Uses res.attachment to prompt browser to
+    @name File
+    @class File Used to serve up files to the client. Uses res.attachment to prompt browser to
     save the file.
-   */
-  var handle = function (req, res) {
+    */
+  var queryDatabase = require(/** @lends File# */ './data').queryDatabase;
+  // https://localhost/dev/file?recordType=XM.File&id=18e0573f-a08f-4016-ab4d-6205f2c89f77
+
+  exports.file = function (/** @lends File# */req, res) {
     var args = req.query,
       recordType = args.recordType,
       recordId = args.id,
@@ -24,28 +25,28 @@ regexp:true, undef:true, strict:true, trailing:true, white:true */
     }
 
     queryPayload = {
-      recordType: recordType,
-      id: Number(recordId)
+      nameSpace: recordType.prefix(),
+      type: recordType.suffix(),
+      id: recordId
     };
 
-    retrieveEngine(queryPayload, req.session, function (result) {
+    queryDatabase("get", queryPayload, req.session, function (result) {
       var content, data, filename, extension, isBinaryEncoding, buffer;
 
       if (result.isError) {
         res.send(result);
       } else {
-        content = result.data;
+        content = result.data.data;
 
         filename = content.description;
         extension = filename ? filename.substring(filename.lastIndexOf('.') + 1) : '';
         isBinaryEncoding = extension !== 'txt' && extension !== 'csv';
 
-        // pg represents bytea data as hex. For text data (like a csv file)
-        // we need to read to a buffer and then convert to utf-8. For binary
-        // data we can just send the buffer itself as data.
         //
-        // The first two characters of the data from pg is \x and must be ignored
-        buffer = new Buffer(content.data.substring(2), "hex");
+        // The data comes back as binary. Put it in a buffer and convert to
+        // utf-8 if it is text data
+        //
+        buffer = new Buffer(content.data);
         data = isBinaryEncoding ? buffer : buffer.toString("utf-8");
 
         res.attachment(filename);
@@ -53,6 +54,4 @@ regexp:true, undef:true, strict:true, trailing:true, white:true */
       }
     });
   };
-
-  exports.file = handle;
 }());

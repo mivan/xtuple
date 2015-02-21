@@ -4,8 +4,8 @@
     "nameSpace": "XM",
     "type": "Customer",
     "table": "custinfo",
+    "isRest": true,
     "lockable": true,
-    "idSequenceName": "cust_cust_id_seq",
     "orderSequence": "CRMAccountNumber",
     "comment": "Customer Map",
     "privileges": {
@@ -14,6 +14,22 @@
         "read": "ViewCustomerMasters",
         "update": "MaintainCustomerMasters",
         "delete": "MaintainCustomerMasters"
+      },
+      "personal":{
+        "create":"MaintainPersonalCRMAccounts",
+        "read":"ViewPersonalCRMAccounts",
+        "update":"MaintainPersonalCRMAccounts",
+        "delete":"MaintainPersonalCRMAccounts",
+        "properties":[
+          "account.owner.username",
+          "account.number"
+        ]
+      },
+      "attribute": {
+        "creditStatus": {
+          "create": "UpdateCustomerCreditStatus",
+          "update": "UpdateCustomerCreditStatus"
+        }
       }
     },
     "properties": [
@@ -29,28 +45,33 @@
         "name": "number",
         "attr": {
           "type": "String",
-          "column": "cust_number"
+          "column": "cust_number",
+          "isNaturalKey": true,
+          "required": true
         }
       },
       {
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "cust_name"
+          "column": "cust_name",
+          "required": true
         }
       },
       {
         "name": "customerType",
         "toOne": {
           "type": "CustomerType",
-          "column": "cust_custtype_id"
+          "column": "cust_custtype_id",
+          "required": true
         }
       },
       {
         "name": "isActive",
         "attr": {
           "type": "Boolean",
-          "column": "cust_active"
+          "column": "cust_active",
+          "required": true
         }
       },
       {
@@ -82,13 +103,14 @@
         "name": "salesRep",
         "toOne": {
           "type": "SalesRep",
-          "column": "cust_salesrep_id"
+          "column": "cust_salesrep_id",
+          "required": true
         }
       },
       {
         "name": "commission",
         "attr": {
-          "type": "Number",
+          "type": "Percent",
           "column": "cust_commprcnt"
         }
       },
@@ -103,35 +125,40 @@
         "name": "shipCharge",
         "toOne": {
           "type": "ShipCharge",
-          "column": "cust_shipchrg_id"
+          "column": "cust_shipchrg_id",
+          "required": true
         }
       },
       {
         "name": "isFreeFormShipto",
         "attr": {
           "type": "Boolean",
-          "column": "cust_ffshipto"
+          "column": "cust_ffshipto",
+          "required": true
         }
       },
       {
         "name": "isFreeFormBillto",
         "attr": {
           "type": "Boolean",
-          "column": "cust_ffbillto"
+          "column": "cust_ffbillto",
+          "required": true
         }
       },
       {
         "name": "terms",
         "toOne": {
           "type": "Terms",
-          "column": "cust_terms_id"
+          "column": "cust_terms_id",
+          "required": true
         }
       },
       {
         "name": "discount",
         "attr": {
-          "type": "Number",
-          "column": "cust_discntprcnt"
+          "type": "Percent",
+          "column": "cust_discntprcnt",
+          "required": true
         }
       },
       {
@@ -146,14 +173,16 @@
         "name": "creditStatus",
         "attr": {
           "type": "String",
-          "column": "cust_creditstatus"
+          "column": "cust_creditstatus",
+          "required": true
         }
       },
       {
         "name": "balanceMethod",
         "attr": {
           "type": "String",
-          "column": "cust_balmethod"
+          "column": "cust_balmethod",
+          "required": true
         }
       },
       {
@@ -231,42 +260,48 @@
         "name": "backorder",
         "attr": {
           "type": "Boolean",
-          "column": "cust_backorder"
+          "column": "cust_backorder",
+          "required": true
         }
       },
       {
         "name": "partialShip",
         "attr": {
           "type": "Boolean",
-          "column": "cust_partialship"
+          "column": "cust_partialship",
+          "required": true
         }
       },
       {
         "name": "blanketPurchaseOrders",
         "attr": {
           "type": "Boolean",
-          "column": "cust_blanketpos"
+          "column": "cust_blanketpos",
+          "required": true
         }
       },
       {
         "name": "usesPurchaseOrders",
         "attr": {
           "type": "Boolean",
-          "column": "cust_usespos"
+          "column": "cust_usespos",
+          "required": true
         }
       },
       {
         "name": "autoUpdateStatus",
         "attr": {
           "type": "Boolean",
-          "column": "cust_autoupdatestatus"
+          "column": "cust_autoupdatestatus",
+          "required": true
         }
       },
       {
         "name": "autoHoldOrders",
         "attr": {
           "type": "Boolean",
-          "column": "cust_autoholdorders"
+          "column": "cust_autoholdorders",
+          "required": true
         }
       },
       {
@@ -327,11 +362,670 @@
         "name": "preferredSite",
         "toOne": {
           "type": "SiteRelation",
-          "column": "cust_preferred_warehous_id"
+          "column": "cust_preferred_warehous_id",
+          "nullValue": -1
+        }
+      },
+      {
+        "name": "creditCards",
+        "toMany": {
+          "isNested": true,
+          "type": "CreditCard",
+          "column": "cust_id",
+          "inverse": "customer"
+        }
+      }
+    ],
+    "extensions": [{
+      "table": "xt.custcustemlprofile",
+      "isExtension": true,
+      "relations": [
+        {
+          "column": "custcustemlprofile_cust_id",
+          "inverse": "id"
+        }
+      ],
+      "properties": [
+        {
+          "name": "emailProfile",
+          "toOne": {
+            "type": "CustomerEmailProfile",
+            "column": "custcustemlprofile_custemlprofile_id"
+          }
+        }
+      ]
+    }],
+    "isSystem": true
+  },
+  {
+    "context": "xtuple",
+    "nameSpace": "XM",
+    "type": "SalesCustomer",
+    "table": "custinfo",
+    "idSequenceName": "cust_cust_id_seq",
+    "orderSequence": "CRMAccountNumber",
+    "comment": "Customer Map",
+    "privileges": {
+      "all": {
+        "create": "MaintainSalesOrders",
+        "read": "ViewSalesOrders ViewAROpenItems EditAROpenItem",
+        "update": "MaintainSalesOrders",
+        "delete": "MaintainSalesOrders"
+      },
+      "attribute": {
+        "creditStatus": {
+          "create": "UpdateCustomerCreditStatus",
+          "update": "UpdateCustomerCreditStatus"
+        }
+      }
+    },
+    "properties": [
+      {
+        "name": "id",
+        "attr": {
+          "type": "Number",
+          "column": "cust_id",
+          "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "number",
+        "attr": {
+          "type": "String",
+          "column": "cust_number",
+          "isNaturalKey": true,
+          "required": true
+        }
+      },
+      {
+        "name": "name",
+        "attr": {
+          "type": "String",
+          "column": "cust_name",
+          "required": true
+        }
+      },
+      {
+        "name": "customerType",
+        "toOne": {
+          "type": "CustomerType",
+          "column": "cust_custtype_id",
+          "required": true
+        }
+      },
+      {
+        "name": "isActive",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_active",
+          "required": true
+        }
+      },
+      {
+        "name": "notes",
+        "attr": {
+          "type": "String",
+          "column": "cust_comments"
+        }
+      },
+      {
+        "name": "billingContact",
+        "toOne": {
+          "isNested": true,
+          "type": "ContactRelation",
+          "column": "cust_cntct_id",
+          "inverse": "id"
+        }
+      },
+      {
+        "name": "correspondenceContact",
+        "toOne": {
+          "isNested": true,
+          "type": "ContactRelation",
+          "column": "cust_corrcntct_id",
+          "inverse": "id"
+        }
+      },
+      {
+        "name": "salesRep",
+        "toOne": {
+          "type": "SalesRep",
+          "column": "cust_salesrep_id",
+          "required": true
+        }
+      },
+      {
+        "name": "commission",
+        "attr": {
+          "type": "Percent",
+          "column": "cust_commprcnt"
+        }
+      },
+      {
+        "name": "shipVia",
+        "attr": {
+          "type": "String",
+          "column": "cust_shipvia"
+        }
+      },
+      {
+        "name": "shipCharge",
+        "toOne": {
+          "type": "ShipCharge",
+          "column": "cust_shipchrg_id",
+          "required": true
+        }
+      },
+      {
+        "name": "isFreeFormShipto",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_ffshipto",
+          "required": true
+        }
+      },
+      {
+        "name": "isFreeFormBillto",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_ffbillto",
+          "required": true
+        }
+      },
+      {
+        "name": "terms",
+        "toOne": {
+          "type": "Terms",
+          "column": "cust_terms_id",
+          "required": true
+        }
+      },
+      {
+        "name": "discount",
+        "attr": {
+          "type": "Percent",
+          "column": "cust_discntprcnt",
+          "required": true
+        }
+      },
+      {
+        "name": "currency",
+        "toOne": {
+          "type": "Currency",
+          "column": "cust_curr_id",
+          "defalutValue": "baseCurrency"
+        }
+      },
+      {
+        "name": "creditStatus",
+        "attr": {
+          "type": "String",
+          "column": "cust_creditstatus",
+          "required": true
+        }
+      },
+      {
+        "name": "balanceMethod",
+        "attr": {
+          "type": "String",
+          "column": "cust_balmethod",
+          "required": true
+        }
+      },
+      {
+        "name": "creditLimit",
+        "attr": {
+          "type": "Number",
+          "column": "cust_creditlmt"
+        }
+      },
+      {
+        "name": "creditLimitCurrency",
+        "toOne": {
+          "type": "Currency",
+          "column": "cust_creditlmt_curr_id"
+        }
+      },
+      {
+        "name": "creditRating",
+        "attr": {
+          "type": "String",
+          "column": "cust_creditrating"
+        }
+      },
+      {
+        "name": "graceDays",
+        "attr": {
+          "type": "Number",
+          "column": "cust_gracedays"
+        }
+      },
+      {
+        "name": "taxZone",
+        "toOne": {
+          "type": "TaxZone",
+          "column": "cust_taxzone_id"
+        }
+      },
+      {
+        "name": "shiptos",
+        "toMany": {
+          "isNested": true,
+          "type": "CustomerShipto",
+          "column": "cust_id",
+          "inverse": "customer"
+        }
+      },
+      {
+        "name": "backorder",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_backorder",
+          "required": true
+        }
+      },
+      {
+        "name": "partialShip",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_partialship",
+          "required": true
+        }
+      },
+      {
+        "name": "blanketPurchaseOrders",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_blanketpos",
+          "required": true
+        }
+      },
+      {
+        "name": "usesPurchaseOrders",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_usespos",
+          "required": true
+        }
+      },
+      {
+        "name": "autoUpdateStatus",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_autoupdatestatus",
+          "required": true
+        }
+      },
+      {
+        "name": "autoHoldOrders",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_autoholdorders",
+          "required": true
+        }
+      },
+      {
+        "name": "preferredSite",
+        "toOne": {
+          "type": "SiteRelation",
+          "column": "cust_preferred_warehous_id",
+          "nullValue": -1
+        }
+      },
+      {
+        "name": "creditCards",
+        "toMany": {
+          "isNested": true,
+          "type": "CreditCard",
+          "column": "cust_id",
+          "inverse": "customer"
         }
       }
     ],
     "extensions": [],
+    "isSystem": true
+  },
+  {
+    "context": "xtuple",
+    "nameSpace": "XM",
+    "type": "BillingCustomer",
+    "table": "custinfo",
+    "idSequenceName": "cust_cust_id_seq",
+    "orderSequence": "CRMAccountNumber",
+    "comment": "Customer Map for Billing",
+    "privileges": {
+      "all": {
+        "create": false,
+        "read": "ViewMiscInvoices ViewCreditMemos",
+        "update": false,
+        "delete": false
+      }
+    },
+    "properties": [
+      {
+        "name": "id",
+        "attr": {
+          "type": "Number",
+          "column": "cust_id",
+          "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "number",
+        "attr": {
+          "type": "String",
+          "column": "cust_number",
+          "isNaturalKey": true,
+          "required": true
+        }
+      },
+      {
+        "name": "name",
+        "attr": {
+          "type": "String",
+          "column": "cust_name",
+          "required": true
+        }
+      },
+      {
+        "name": "customerType",
+        "toOne": {
+          "type": "CustomerType",
+          "column": "cust_custtype_id",
+          "required": true
+        }
+      },
+      {
+        "name": "customerGroups",
+        "toMany": {
+          "isNested": true,
+          "type": "CustomerCustomerGroup",
+          "column": "cust_id",
+          "inverse": "customer"
+        }
+      },
+      {
+        "name": "isActive",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_active",
+          "required": true
+        }
+      },
+      {
+        "name": "notes",
+        "attr": {
+          "type": "String",
+          "column": "cust_comments"
+        }
+      },
+      {
+        "name": "billingContact",
+        "toOne": {
+          "isNested": true,
+          "type": "ContactRelation",
+          "column": "cust_cntct_id",
+          "inverse": "id"
+        }
+      },
+      {
+        "name": "salesRep",
+        "toOne": {
+          "type": "SalesRep",
+          "column": "cust_salesrep_id",
+          "required": true
+        }
+      },
+      {
+        "name": "commission",
+        "attr": {
+          "type": "Percent",
+          "column": "cust_commprcnt"
+        }
+      },
+      {
+        "name": "terms",
+        "toOne": {
+          "type": "Terms",
+          "column": "cust_terms_id",
+          "required": true
+        }
+      },
+      {
+        "name": "taxZone",
+        "toOne": {
+          "type": "TaxZone",
+          "column": "cust_taxzone_id"
+        }
+      },
+      {
+        "name": "isFreeFormBillto",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_ffbillto",
+          "required": true
+        }
+      },
+      {
+        "name": "shiptos",
+        "toMany": {
+          "isNested": true,
+          "type": "CustomerShipto",
+          "column": "cust_id",
+          "inverse": "customer"
+        }
+      },
+      {
+        "name": "currency",
+        "toOne": {
+          "type": "Currency",
+          "column": "cust_curr_id",
+          "defalutValue": "baseCurrency"
+        }
+      }
+    ],
+    "extensions": [{
+      "table": "xt.custcustemlprofile",
+      "isExtension": true,
+      "relations": [
+        {
+          "column": "custcustemlprofile_cust_id",
+          "inverse": "id"
+        }
+      ],
+      "properties": [
+        {
+          "name": "emailProfile",
+          "toOne": {
+            "type": "CustomerEmailProfile",
+            "column": "custcustemlprofile_custemlprofile_id"
+          }
+        }
+      ]
+    }],
+    "isSystem": true
+  },
+  {
+    "context": "xtuple",
+    "nameSpace": "XM",
+    "type": "CustomerEmailProfile",
+    "table": "xt.custemlprofile",
+    "isRest": true,
+    "idSequenceName": "emlprofile_emlprofile_id_seq",
+    "comment": "Customer Email Profile Map",
+    "privileges": {
+      "all": {
+        "create": "MaintainCustomerEmailProfiles",
+        "read": true,
+        "update": "MaintainCustomerEmailProfiles",
+        "delete": "MaintainCustomerEmailProfiles"
+      }
+    },
+    "properties": [
+      {
+        "name": "id",
+        "attr": {
+          "type": "Number",
+          "column": "emlprofile_id",
+          "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "name",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_name",
+          "isNaturalKey": true
+        }
+      },
+      {
+        "name": "description",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_descrip"
+        }
+      },
+      {
+        "name": "from",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_from"
+        }
+      },
+      {
+        "name": "replyTo",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_replyto"
+        }
+      },
+      {
+        "name": "to",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_to"
+        }
+      },
+      {
+        "name": "cc",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_cc"
+        }
+      },
+      {
+        "name": "bcc",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_bcc"
+        }
+      },
+      {
+        "name": "subject",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_subject"
+        }
+      },
+      {
+        "name": "body",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_body"
+        }
+      }
+    ],
+    "isSystem": true
+  },
+  {
+    "context": "xtuple",
+    "nameSpace": "SYS",
+    "type": "CustomerEmailProfile",
+    "table": "xt.custemlprofile",
+    "idSequenceName": "emlprofile_emlprofile_id_seq",
+    "comment": "Customer Email Profile Map",
+    "privileges": {
+      "all": {
+        "create": "MaintainCustomerEmailProfiles",
+        "read": true,
+        "update": "MaintainCustomerEmailProfiles",
+        "delete": "MaintainCustomerEmailProfiles"
+      }
+    },
+    "properties": [
+      {
+        "name": "id",
+        "attr": {
+          "type": "Number",
+          "column": "emlprofile_id",
+          "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "name",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_name",
+          "isNaturalKey": true
+        }
+      },
+      {
+        "name": "description",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_descrip"
+        }
+      },
+      {
+        "name": "from",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_from"
+        }
+      },
+      {
+        "name": "replyTo",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_replyto"
+        }
+      },
+      {
+        "name": "to",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_to"
+        }
+      },
+      {
+        "name": "cc",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_cc"
+        }
+      },
+      {
+        "name": "bcc",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_bcc"
+        }
+      },
+      {
+        "name": "subject",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_subject"
+        }
+      },
+      {
+        "name": "body",
+        "attr": {
+          "type": "String",
+          "column": "emlprofile_body"
+        }
+      }
+    ],
     "isSystem": true
   },
   {
@@ -359,6 +1053,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "targetType",
         "attr": {
           "type": "String",
@@ -369,7 +1071,7 @@
       {
         "name": "customer",
         "attr": {
-          "type": "Customer",
+          "type": "Number",
           "column": "charass_target_id"
         }
       },
@@ -424,6 +1126,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -434,7 +1144,7 @@
       {
         "name": "customer",
         "attr": {
-          "type": "Customer",
+          "type": "Number",
           "column": "comment_source_id"
         }
       },
@@ -457,7 +1167,8 @@
         "name": "isPublic",
         "attr": {
           "type": "Boolean",
-          "column": "comment_public"
+          "column": "comment_public",
+          "value": true
         }
       },
       {
@@ -503,9 +1214,17 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "customer",
         "attr": {
-          "type": "Customer",
+          "type": "Number",
           "column": "taxreg_rel_id"
         }
       },
@@ -520,8 +1239,7 @@
       {
         "name": "taxAuthority",
         "toOne": {
-          "isNested": true,
-          "type": "TaxAuthorityRelation",
+          "type": "TaxAuthority",
           "column": "taxreg_taxauth_id"
         }
       },
@@ -589,9 +1307,17 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "customer",
         "attr": {
-          "type": "Customer",
+          "type": "Number",
           "column": "shipto_cust_id"
         }
       },
@@ -599,28 +1325,32 @@
         "name": "number",
         "attr": {
           "type": "String",
-          "column": "shipto_num"
+          "column": "shipto_num",
+          "required": true
         }
       },
       {
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "shipto_name"
+          "column": "shipto_name",
+          "required": true
         }
       },
       {
         "name": "isActive",
         "attr": {
           "type": "Boolean",
-          "column": "shipto_active"
+          "column": "shipto_active",
+          "required": true
         }
       },
       {
         "name": "isDefault",
         "attr": {
           "type": "Boolean",
-          "column": "shipto_default"
+          "column": "shipto_default",
+          "isRequired": true
         }
       },
       {
@@ -633,7 +1363,7 @@
       {
         "name": "commission",
         "attr": {
-          "type": "Number",
+          "type": "Percent",
           "column": "shipto_commission"
         }
       },
@@ -662,7 +1392,8 @@
         "name": "shipCharge",
         "toOne": {
           "type": "ShipCharge",
-          "column": "shipto_shipchrg_id"
+          "column": "shipto_shipchrg_id",
+          "required": true
         }
       },
       {
@@ -724,6 +1455,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "source",
         "attr": {
           "type": "Number",
@@ -779,6 +1518,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -840,6 +1587,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "source",
         "attr": {
           "type": "Number",
@@ -895,6 +1650,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -956,6 +1719,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "source",
         "attr": {
           "type": "Number",
@@ -1014,6 +1785,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "source",
         "attr": {
           "type": "Number",
@@ -1052,6 +1831,7 @@
     "nameSpace": "XM",
     "type": "CustomerShiptoRelation",
     "table": "shiptoinfo",
+    "isRest": true,
     "comment": "Customer Shipto Relation Map",
     "privileges": {
       "all": {
@@ -1071,9 +1851,17 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "customer",
         "toOne": {
-          "type": "Customer",
+          "type": "CustomerRelation",
           "column": "shipto_cust_id"
         }
       },
@@ -1096,6 +1884,13 @@
         "attr": {
           "type": "Boolean",
           "column": "shipto_active"
+        }
+      },
+      {
+        "name": "isDefault",
+        "attr": {
+          "type": "Boolean",
+          "column": "shipto_default"
         }
       },
       {
@@ -1124,7 +1919,142 @@
       {
         "name": "commission",
         "attr": {
+          "type": "Percent",
+          "column": "shipto_commission"
+        }
+      },
+      {
+        "name": "taxZone",
+        "toOne": {
+          "type": "TaxZone",
+          "column": "shipto_taxzone_id"
+        }
+      },
+      {
+        "name": "shipCharge",
+        "toOne": {
+          "type": "ShipCharge",
+          "column": "shipto_shipchrg_id"
+        }
+      },
+      {
+        "name": "shipVia",
+        "attr": {
+          "type": "String",
+          "column": "shipto_shipvia"
+        }
+      },
+      {
+        "name": "shipZone",
+        "toOne": {
+          "type": "ShipZone",
+          "column": "shipto_shipzone_id"
+        }
+      },
+      {
+        "name": "notes",
+        "attr": {
+          "type": "String",
+          "column": "shipto_shipcomments"
+        }
+      }
+    ],
+    "isSystem": true
+  },
+  {
+    "context": "xtuple",
+    "nameSpace": "XM",
+    "type": "SalesCustomerShiptoRelation",
+    "table": "shiptoinfo",
+    "isRest": true,
+    "comment": "Sales Customer Shipto Relation Map",
+    "privileges": {
+      "all": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
+      }
+    },
+    "properties": [
+      {
+        "name": "id",
+        "attr": {
           "type": "Number",
+          "column": "shipto_id",
+          "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
+        "name": "customer",
+        "attr": {
+          "type": "Number",
+          "column": "shipto_cust_id"
+        }
+      },
+      {
+        "name": "number",
+        "attr": {
+          "type": "String",
+          "column": "shipto_num"
+        }
+      },
+      {
+        "name": "name",
+        "attr": {
+          "type": "String",
+          "column": "shipto_name"
+        }
+      },
+      {
+        "name": "isActive",
+        "attr": {
+          "type": "Boolean",
+          "column": "shipto_active"
+        }
+      },
+      {
+        "name": "isDefault",
+        "attr": {
+          "type": "Boolean",
+          "column": "shipto_default"
+        }
+      },
+      {
+        "name": "contact",
+        "toOne": {
+          "isNested": true,
+          "type": "ContactRelation",
+          "column": "shipto_cntct_id"
+        }
+      },
+      {
+        "name": "address",
+        "toOne": {
+          "isNested": true,
+          "type": "AddressInfo",
+          "column": "shipto_addr_id"
+        }
+      },
+      {
+        "name": "salesRep",
+        "toOne": {
+          "type": "SalesRep",
+          "column": "shipto_salesrep_id"
+        }
+      },
+      {
+        "name": "commission",
+        "attr": {
+          "type": "Percent",
           "column": "shipto_commission"
         }
       },
@@ -1171,13 +2101,14 @@
     "nameSpace": "XM",
     "type": "CustomerType",
     "table": "custtype",
-    "lockable": true,
+    "isRest": true,
     "idSequenceName": "custtype_custtype_id_seq",
+    "lockable": true,
     "comment": "Vendor Type Map",
     "privileges": {
       "all": {
         "create": "MaintainCustomerTypes",
-        "read": true,
+        "read": "ViewCustomerTypes",
         "update": "MaintainCustomerTypes",
         "delete": "MaintainCustomerTypes"
       }
@@ -1195,7 +2126,8 @@
         "name": "code",
         "attr": {
           "type": "String",
-          "column": "custtype_code"
+          "column": "custtype_code",
+          "isNaturalKey": true
         }
       },
       {
@@ -1211,6 +2143,94 @@
   {
     "context": "xtuple",
     "nameSpace": "XM",
+    "type": "CustomerRelation",
+    "table": "custinfo",
+    "isRest": true,
+    "comment": "Customer Relation Map",
+    "privileges": {
+      "all": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
+      }
+    },
+    "properties": [
+      {
+        "name": "id",
+        "attr": {
+          "type": "Number",
+          "column": "cust_id",
+          "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "number",
+        "attr": {
+          "type": "String",
+          "column": "cust_number",
+          "isNaturalKey": true
+        }
+      },
+      {
+        "name": "name",
+        "attr": {
+          "type": "String",
+          "column": "cust_name"
+        }
+      },
+      {
+        "name": "isActive",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_active"
+        }
+      }
+    ],
+    "extensions": [
+      {
+        "table": "shiptoinfo",
+        "relations": [
+          {
+            "column": "shipto_cust_id"
+          }
+        ],
+        "properties": [
+          {
+            "name": "shipto",
+            "toOne": {
+              "isNested": true,
+              "type": "CustomerShipto",
+              "column": "shipto_id"
+            }
+          },
+          {
+            "name": "isDefault",
+            "attr": {
+              "type": "Boolean",
+              "column": "shipto_default",
+              "value": true,
+              "isVisible": false
+            }
+          },
+          {
+            "name": "isActive",
+            "attr": {
+              "type": "Boolean",
+              "column": "shipto_active",
+              "value": true,
+              "isVisible": false
+            }
+          }
+        ],
+        "nameSpace": "XM"
+      }
+    ],
+    "isSystem": true
+  },
+  {
+    "context": "xtuple",
+    "nameSpace": "SYS",
     "type": "CustomerRelation",
     "table": "custinfo",
     "comment": "Customer Relation Map",
@@ -1235,7 +2255,57 @@
         "name": "number",
         "attr": {
           "type": "String",
-          "column": "cust_number"
+          "column": "cust_number",
+          "isNaturalKey": true
+        }
+      },
+      {
+        "name": "name",
+        "attr": {
+          "type": "String",
+          "column": "cust_name"
+        }
+      },
+      {
+        "name": "isActive",
+        "attr": {
+          "type": "Boolean",
+          "column": "cust_active"
+        }
+      }
+    ],
+    "isSystem": true
+  },
+  {
+    "context": "xtuple",
+    "nameSpace": "XM",
+    "type": "CustomerListItem",
+    "table": "custinfo",
+    "isRest": true,
+    "comment": "Customer List Item Map",
+    "privileges": {
+      "all": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false
+      }
+    },
+    "properties": [
+      {
+        "name": "id",
+        "attr": {
+          "type": "Number",
+          "column": "cust_id",
+          "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "number",
+        "attr": {
+          "type": "String",
+          "column": "cust_number",
+          "isNaturalKey": true
         }
       },
       {
@@ -1253,95 +2323,19 @@
         }
       },
       {
+        "name": "customerType",
+        "toOne": {
+          "isNested": true,
+          "type": "CustomerType",
+          "column": "cust_custtype_id"
+        }
+      },
+      {
         "name": "billingContact",
         "toOne": {
           "isNested": true,
           "type": "ContactRelation",
           "column": "cust_cntct_id"
-        }
-      },
-      {
-        "name": "isFreeFormShipto",
-        "attr": {
-          "type": "Boolean",
-          "column": "cust_ffshipto"
-        }
-      },
-      {
-        "name": "isFreeFormBillto",
-        "attr": {
-          "type": "Boolean",
-          "column": "cust_ffbillto"
-        }
-      },
-      {
-        "name": "currency",
-        "toOne": {
-          "type": "Currency",
-          "column": "cust_curr_id"
-        }
-      },
-      {
-        "name": "terms",
-        "toOne": {
-          "type": "Terms",
-          "column": "cust_terms_id"
-        }
-      },
-      {
-        "name": "creditStatus",
-        "attr": {
-          "type": "String",
-          "column": "cust_creditstatus"
-        }
-      },
-      {
-        "name": "salesRep",
-        "toOne": {
-          "type": "SalesRep",
-          "column": "cust_salesrep_id"
-        }
-      },
-      {
-        "name": "commission",
-        "attr": {
-          "type": "Number",
-          "column": "cust_commprcnt"
-        }
-      },
-      {
-        "name": "discount",
-        "attr": {
-          "type": "Number",
-          "column": "cust_discntprcnt"
-        }
-      },
-      {
-        "name": "taxZone",
-        "toOne": {
-          "type": "TaxZone",
-          "column": "cust_taxzone_id"
-        }
-      },
-      {
-        "name": "shipVia",
-        "attr": {
-          "type": "String",
-          "column": "cust_shipvia"
-        }
-      },
-      {
-        "name": "shipCharge",
-        "toOne": {
-          "type": "ShipCharge",
-          "column": "cust_shipchrg_id"
-        }
-      },
-      {
-        "name": "preferredSite",
-        "toOne": {
-          "type": "SiteRelation",
-          "column": "cust_preferred_warehous_id"
         }
       }
     ],
@@ -1391,6 +2385,7 @@
     "nameSpace": "XM",
     "type": "ShipCharge",
     "table": "shipchrg",
+    "isRest": true,
     "lockable": true,
     "idSequenceName": "shipchrg_shipchrg_id_seq",
     "comment": "Ship Charge Map",
@@ -1415,7 +2410,8 @@
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "shipchrg_name"
+          "column": "shipchrg_name",
+          "isNaturalKey": true
         }
       },
       {
@@ -1440,13 +2436,14 @@
     "nameSpace": "XM",
     "type": "ShipVia",
     "table": "shipvia",
-    "lockable": true,
+    "isRest": true,
     "idSequenceName": "shipvia_shipvia_id_seq",
+    "lockable": true,
     "comment": "Ship Via Map",
     "privileges": {
       "all": {
         "create": "MaintainShipVias",
-        "read": true,
+        "read": "ViewShipVias",
         "update": "MaintainShipVias",
         "delete": "MaintainShipVias"
       }
@@ -1464,7 +2461,8 @@
         "name": "code",
         "attr": {
           "type": "String",
-          "column": "shipvia_code"
+          "column": "shipvia_code",
+          "isNaturalKey": true
         }
       },
       {
@@ -1482,13 +2480,14 @@
     "nameSpace": "XM",
     "type": "ShipZone",
     "table": "shipzone",
+    "isRest": true,
     "lockable": true,
     "idSequenceName": "shipzone_shipzone_id_seq",
     "comment": "Ship Zone Map",
     "privileges": {
       "all": {
         "create": "MaintainShippingZones",
-        "read": true,
+        "read": "ViewShippingZones",
         "update": "MaintainShippingZones",
         "delete": "MaintainShippingZones"
       }
@@ -1506,7 +2505,8 @@
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "shipzone_name"
+          "column": "shipzone_name",
+          "isNaturalKey": true
         }
       },
       {
@@ -1524,12 +2524,13 @@
     "nameSpace": "XM",
     "type": "CustomerGroup",
     "table": "custgrp",
-    "lockable": true,
+    "isRest": true,
     "idSequenceName": "custgrp_custgrp_id_seq",
+    "lockable": true,
     "comment": "Customer Group Map",
-    "priveleges": {
+    "privileges": {
       "all": {
-          "create": "MaintainCustomerGroups",
+        "create": "MaintainCustomerGroups",
         "read": "ViewCustomerGroups",
         "update": "MaintainCustomerGroups",
         "delete": "MaintainCustomerGroups"
@@ -1548,13 +2549,14 @@
         "name": "name",
         "attr":	{
           "type": "String",
-          "column": "custgrp_name"
+          "column": "custgrp_name",
+          "isNaturalKey": true
         }
       },
       {
         "name": "description",
         "attr":	{
-          "type": "Number",
+          "type": "String",
           "column": "custgrp_descrip"
         }
       },
@@ -1587,6 +2589,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "customerGroup",
         "attr": {
           "type": "Number",
@@ -1608,8 +2618,52 @@
   {
     "context": "xtuple",
     "nameSpace": "XM",
+    "type": "CustomerCustomerGroup",
+    "table": "custgrpitem",
+    "idSequenceName": "custgrpitem_custgrpitem_id_seq",
+    "comment": "Customer Group Customer Map",
+    "properties": [
+      {
+        "name": "id",
+        "attr":	{
+          "type": "Number",
+          "column": "custgrpitem_id",
+          "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
+        "name": "customerGroup",
+        "toOne": {
+          "type": "CustomerGroup",
+          "isNested": true,
+          "column": "custgrpitem_custgrp_id"
+        }
+      },
+      {
+        "name": "customer",
+        "attr": {
+          "type": "Number",
+          "column": "custgrpitem_cust_id"
+        }
+      }
+    ],
+    "isNestedOnly": true,
+    "isSystem": true
+  },
+  {
+    "context": "xtuple",
+    "nameSpace": "XM",
     "type": "CustomerProspectRelation",
     "table": "xt.customer_prospect",
+    "isRest": true,
     "comment": "Customer Prospect Relation Map",
     "privileges": {
       "all": {
@@ -1632,7 +2686,8 @@
         "name": "number",
         "attr": {
           "type": "String",
-          "column": "number"
+          "column": "number",
+          "isNaturalKey": true
         }
       },
       {
@@ -1668,7 +2723,8 @@
         "name": "isFreeFormBillto",
         "attr": {
           "type": "Boolean",
-          "column": "cust_ffbillto"
+          "column": "cust_ffbillto",
+          "required": true
         }
       },
       {
@@ -1702,14 +2758,14 @@
       {
         "name": "commission",
         "attr": {
-          "type": "Number",
+          "type": "Percent",
           "column": "cust_commprcnt"
         }
       },
       {
         "name": "discount",
         "attr": {
-          "type": "Number",
+          "type": "Percent",
           "column": "cust_discntprcnt"
         }
       },
@@ -1737,16 +2793,18 @@
       {
         "name": "preferredSite",
         "toOne": {
-          "type": "SiteRelation",
-          "column": "site"
+          "type": "Site",
+          "column": "site",
+          "nullValue": -1
         }
       },
       {
-        "name": "defaultShipto",
-        "toOne": {
+        "name": "shiptos",
+        "toMany": {
           "isNested": true,
-          "type": "CustomerShipto",
-          "column": "default_shipto_id"
+          "type": "SalesCustomerShiptoRelation",
+          "column": "id",
+          "inverse": "customer"
         }
       },
       {
@@ -1754,6 +2812,20 @@
         "attr": {
           "type": "String",
           "column": "status"
+        }
+      },
+      {
+        "name": "customerType",
+        "toOne": {
+          "type": "CustomerType",
+          "column": "type"
+        }
+      },
+      {
+        "name": "account",
+        "attr": {
+          "type": "Number",
+          "column": "crmacct_id"
         }
       }
     ],
@@ -1765,6 +2837,7 @@
     "nameSpace": "XM",
     "type": "CustomerProspectListItem",
     "table": "xt.customer_prospect",
+    "isRest": true,
     "comment": "Customer Prospect List Item Map",
     "privileges": {
       "all": {
@@ -1787,7 +2860,8 @@
         "name": "number",
         "attr": {
           "type": "String",
-          "column": "number"
+          "column": "number",
+          "isNaturalKey": true
         }
       },
       {
@@ -1817,6 +2891,13 @@
         "attr": {
           "type": "String",
           "column": "status"
+        }
+      },
+      {
+        "name": "customerType",
+        "toOne": {
+          "type": "CustomerType",
+          "column": "type"
         }
       }
     ],

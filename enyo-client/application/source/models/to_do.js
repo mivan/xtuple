@@ -1,5 +1,5 @@
-/*jshint indent:2, curly:true eqeqeq:true, immed:true, latedef:true,
-newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true
+/*jshint indent:2, curly:true, eqeqeq:true, immed:true, latedef:true,
+newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true,
 white:true*/
 /*global XT:true, XM:true, Backbone:true, _:true, console:true */
 
@@ -62,38 +62,15 @@ white:true*/
       };
     },
 
-    requiredAttributes: [
-      "dueDate",
-      "name"
-    ],
-
     // ..........................................................
     // METHODS
     //
 
-    /**
-      This is the source of data for the user three-way status interface where
-      the only possible status options are `PENDING`, `DEFERRED` and `NEITHER`.
-
-      @returns {String}
-    */
-    getToDoStatusProxy: function () {
-      var K = XM.ToDo;
-      return this._status || K.NEITHER;
-    },
-
-    initialize: function () {
-      XM.Model.prototype.initialize.apply(this, arguments);
-      this.on('change:startDate change:completeDate', this.toDoStatusDidChange);
-      this.on('change:status', this.toDoDidChange);
-      this.on('changeStatus', this.toDoDidChange);
-
+    bindEvents: function () {
+      XM.Model.prototype.bindEvents.apply(this, arguments);
+      this.on('change:startDate change:completeDate change:statusProxy', this.toDoStatusDidChange);
       // Bind document assignments
       this.bindDocuments();
-    },
-
-    toDoDidChange: function () {
-      this.setToDoStatusProxy(this.get('status'));
     },
 
     /**
@@ -101,44 +78,23 @@ white:true*/
       which can be one of five options.
     */
     toDoStatusDidChange: function (model, value, options) {
-      var proxy = this.getToDoStatusProxy(),
+      var proxy = this.get("statusProxy"),
         startDate = this.get('startDate'),
         completeDate = this.get('completeDate'),
         K = XM.ToDo,
         attrStatus = K.NEITHER;
-      if (this.isNotReady()) { return; }
 
       // Set the `status` attribute with appropriate value
       if (completeDate) {
         attrStatus = K.COMPLETED;
-        this.setToDoStatusProxy(K.NEITHER);
-      } else if (proxy === K.DEFERRED) {
-        attrStatus = K.DEFERRED;
-      } else if (proxy === K.PENDING) {
-        attrStatus = K.PENDING;
+        this.set("statusProxy", K.NEITHER);
+      } else if (proxy === K.DEFERRED || proxy === K.PENDING) {
+        attrStatus = proxy;
       } else if (startDate) {
         attrStatus = K.IN_PROCESS;
+        this.set("statusProxy", K.NEITHER);
       }
       this.set('status', attrStatus);
-    },
-
-    /**
-      Set the three-way status option.
-
-      @param {String} Value
-      @returns Receiver
-    */
-    setToDoStatusProxy: function (value) {
-      var K = XM.ToDo;
-      if (value === this._status) { return this; }
-      if (value === K.PENDING || value === K.DEFERRED) {
-        this._status = value;
-      } else {
-        if (this._status === K.NEITHER) { return this; }
-        this._status = K.NEITHER;
-      }
-      this.toDoStatusDidChange();
-      return this;
     }
 
   });

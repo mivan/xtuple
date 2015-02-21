@@ -1,5 +1,5 @@
-/*jshint indent:2, curly:true eqeqeq:true, immed:true, latedef:true,
-newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true
+/*jshint indent:2, curly:true, eqeqeq:true, immed:true, latedef:true,
+newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true,
 white:true*/
 /*global XT:true, XM:true, Backbone:true, _:true, console:true */
 
@@ -16,13 +16,20 @@ white:true*/
 
     recordType: 'XM.SalesRep',
 
+    documentKey: 'number',
+
     defaults: {
       isActive: true,
       commission: 0
     }
 
   });
-  
+
+  XM.SalesRep.used = function (id, options) {
+    return XM.ModelMixin.dispatch('XM.SalesRep', 'used',
+      [id], options);
+  };
+
   // ..........................................................
   // COLLECTIONS
   //

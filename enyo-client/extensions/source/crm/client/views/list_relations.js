@@ -1,6 +1,6 @@
-/*jshint bitwise:true, indent:2, curly:true eqeqeq:true, immed:true,
+/*jshint bitwise:true, indent:2, curly:true, eqeqeq:true, immed:true,
 latedef:true, newcap:true, noarg:true, regexp:true, undef:true,
-trailing:true white:true*/
+trailing:true, white:true*/
 /*global XT:true, XV:true, enyo:true*/
 
 (function () {
@@ -33,7 +33,6 @@ trailing:true white:true*/
                 {kind: "XV.ListAttr", attr: "number", classes: "bold"},
                 {kind: "XV.ListAttr", attr: "opportunityStage.name", fit: true},
                 {kind: "XV.ListAttr", attr: "targetClose",
-                  formatter: "formatTargetClose",
                   placeholder: "_noCloseTarget".loc(),
                   classes: "right"}
               ]},
@@ -41,8 +40,7 @@ trailing:true white:true*/
             ]}
           ]}
         ]}
-      ],
-      formatTargetClose: XV.OpportunityList.prototype.formatTargetClose
+      ]
     });
 
     enyo.kind({

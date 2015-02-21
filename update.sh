@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 PRODUCTION=''
 HOST='localhost'
 
@@ -11,7 +11,7 @@ usage()
    -h target host
    -p production mode
 EOF
-}	
+}
 while getopts ":ph:" opt; do
   case $opt in
     p)
@@ -61,31 +61,10 @@ if [ $? != 0  ]
     echo "error updating submodules"
     exit $?
 fi
-cd node-datasource
+
+# remove all npm packages and reinstall them to get the latest.
+rm -rf node_modules
 npm install
 
-# restart the datasource
-monit stop node
-sleep 10
-monit start node
-sleep 10
-
-# update global db
-cd database/source
-psql -U admin  -h $HOST global -f init_global.sql
-cd ../../installer
-./installer.js -h $HOST -d global -u admin -p 5432 -P admin --path ../database/orm
-
-# update instance dbs
-cd ..
-node runMaintenance.js
-
-# build extensions
-cd ../enyo-client/extensions
-./tools/buildExtensions.sh
-
-# deploy enyo client
-cd ../application
-rm -rf deploy
-cd tools
-./deploy.sh
+# rebuild the client and database sides of the app
+./scripts/build_app.js

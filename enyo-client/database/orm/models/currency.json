@@ -4,8 +4,9 @@
     "nameSpace": "XM",
     "type": "Currency",
     "table": "curr_symbol",
-    "lockable": true,
+    "isRest": true,
     "idSequenceName": "curr_symbol_curr_id_seq",
+    "lockable": true,
     "comment": "Currency Map",
     "privileges": {
       "all": {
@@ -28,28 +29,32 @@
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "curr_name"
+          "column": "curr_name",
+          "required": true
         }
       },
       {
         "name": "symbol",
         "attr": {
           "type": "String",
-          "column": "curr_symbol"
+          "column": "curr_symbol",
+          "required": true
         }
       },
       {
         "name": "abbreviation",
         "attr": {
           "type": "String",
-          "column": "curr_abbr"
+          "column": "curr_abbr",
+          "isNaturalKey": true
         }
       },
       {
         "name": "isBase",
         "attr": {
           "type": "Boolean",
-          "column": "curr_base"
+          "column": "curr_base",
+          "required": true
         }
       }
     ],
@@ -60,6 +65,7 @@
     "nameSpace": "XM",
     "type": "CurrencyRate",
     "table": "curr_rate",
+    "isRest": true,
     "idSequenceName": "curr_rate_curr_id_seq",
     "comment": "Currency Map",
     "privileges": {
@@ -80,9 +86,17 @@
         }
       },
       {
-        "name": "currency",
+        "name": "uuid",
         "attr": {
-          "type": "Number",
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
+        "name": "currency",
+        "toOne": {
+          "type": "Currency",
           "column": "curr_id"
         }
       },
@@ -96,14 +110,14 @@
       {
         "name": "effective",
         "attr": {
-          "type": "Date",
+          "type": "EffectiveDate",
           "column": "curr_effective"
         }
       },
       {
         "name": "expires",
         "attr": {
-          "type": "Date",
+          "type": "ExpireDate",
           "column": "curr_expires"
         }
       }

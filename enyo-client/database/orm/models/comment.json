@@ -4,6 +4,7 @@
     "nameSpace": "XM",
     "type": "CommentType",
     "table": "cmnttype",
+    "isRest": true,
     "idSequenceName": "cmnttype_cmnttype_id_seq",
     "comment": "Comment Type Map",
     "privileges": {
@@ -27,7 +28,9 @@
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "cmnttype_name"
+          "column": "cmnttype_name",
+          "isNaturalKey": true,
+          "required": true
         }
       },
       {
@@ -48,7 +51,8 @@
         "name": "commentsEditable",
         "attr": {
           "type": "Boolean",
-          "column": "cmnttype_editable"
+          "column": "cmnttype_editable",
+          "required": true
         }
       },
       {
@@ -96,6 +100,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "commentType",
         "attr": {
           "type": "Number",
@@ -118,6 +130,7 @@
     "nameSpace": "XM",
     "type": "Source",
     "table": "source",
+    "isRest": true,
     "comment": "Comment Type Source Map",
     "privileges": {
       "all": {
@@ -147,7 +160,8 @@
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "source_name"
+          "column": "source_name",
+          "isNaturalKey": true
         }
       },
       {

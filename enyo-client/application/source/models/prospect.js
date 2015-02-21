@@ -1,5 +1,5 @@
-/*jshint indent:2, curly:true eqeqeq:true, immed:true, latedef:true,
-newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true
+/*jshint indent:2, curly:true, eqeqeq:true, immed:true, latedef:true,
+newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true,
 white:true*/
 /*global XT:true, XM:true, Backbone:true, _:true */
 
@@ -16,43 +16,21 @@ white:true*/
 
     recordType: 'XM.Prospect',
 
-    defaults: {
-      isActive: true
+    conversionMap: {
+      name: "name",
+      primaryContact: "contact"
     },
 
-    requiredAttributes: [
-      "isActive"
-    ],
-    
-    // ..........................................................
-    // METHODS
-    //
-    
-    /**
-      Creates a new account model and fetches based on the given ID.
-      Takes attributes from the account model and gives them to this prospect model.
-    */
-    convertFromAccount: function (id) {
-      var account = new XM.Account(),
-          fetchOptions = {},
-          that = this;
-          
-      fetchOptions.id = id;
-      
-      fetchOptions.success = function (resp) {
-        that.set("name", account.get("name"));
-        that.set("Contact", account.get("primaryContact"));
-        that.revertStatus();
-        that.checkConflicts = false;
-      };
-      fetchOptions.error = function (resp) {
-        XT.log("Fetch failed in convertFromAccount");
-      };
-      this.setStatus(XM.Model.BUSY_FETCHING);
-      account.fetch(fetchOptions);
+    defaults: {
+      isActive: true
     }
 
   });
+
+  XM.Prospect.used = function (id, options) {
+    return XM.ModelMixin.dispatch('XM.Prospect', 'used',
+      [id], options);
+  };
 
   /**
     @class

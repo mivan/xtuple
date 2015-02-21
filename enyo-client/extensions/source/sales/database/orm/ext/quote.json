@@ -21,31 +21,13 @@
           "column": "quhead_id",
           "inverse": "source"
         }
-      }
-    ],
-    "sequence": 0,
-    "isSystem": true
-  },
-  {
-    "context": "sales",
-    "nameSpace": "XM",
-    "type": "Opportunity",
-    "table": "ophead",
-    "isExtension": true,
-    "comment": "Extended by Sales",
-    "relations": [
+      },
       {
-        "column": "ophead_id",
-        "inverse": "id"
-      }
-    ],
-    "properties": [
-      {
-        "name": "quoteRelations",
-        "toMany": {
-          "type": "QuoteRelation",
-          "column": "ophead_id",
-          "inverse": "opportunity"
+        "name": "opportunity",
+        "toOne": {
+          "isNested": true,
+          "type": "OpportunityRelation",
+          "column": "quhead_ophead_id"
         }
       }
     ],
@@ -55,27 +37,27 @@
   {
     "context": "sales",
     "nameSpace": "XM",
-    "type": "Prospect",
-    "table": "prospect",
+    "type": "QuoteListItem",
+    "table": "xt.quheadinfo",
     "isExtension": true,
     "comment": "Extended by Sales",
-    "relations": [
+    "relations": [ 
       {
-        "column": "prospect_id",
+        "column": "quhead_id",
         "inverse": "id"
       }
     ],
     "properties": [
       {
-        "name": "quoteRelations",
-        "toMany": {
-          "type": "QuoteRelation",
-          "column": "prospect_id",
-          "inverse": "customer"
+        "name": "opportunity",
+        "toOne": {
+          "isNested": true,
+          "type": "OpportunityRelation",
+          "column": "quhead_ophead_id"
         }
       }
     ],
     "sequence": 0,
     "isSystem": true
-  } 
+  }
 ]

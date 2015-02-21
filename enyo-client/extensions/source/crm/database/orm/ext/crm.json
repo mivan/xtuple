@@ -35,7 +35,7 @@
         "name": "incidentRelations",
         "toMany": {
           "type": "IncidentRelation",
-          "column": "crmacct_id",
+          "column": "crmacct_number",
           "inverse": "account"
         }
       },
@@ -43,7 +43,7 @@
         "name": "opportunityRelations",
         "toMany": {
           "type": "OpportunityRelation",
-          "column": "crmacct_id",
+          "column": "crmacct_number",
           "inverse": "account"
         }
       },
@@ -51,7 +51,7 @@
         "name": "toDoRelations",
         "toMany": {
           "type": "ToDoRelation",
-          "column": "crmacct_id",
+          "column": "crmacct_number",
           "inverse": "account"
         }
       }
@@ -104,7 +104,7 @@
         "name": "incidentRelations",
         "toMany": {
           "type": "IncidentRelation",
-          "column": "cntct_id",
+          "column": "cntct_number",
           "inverse": "contact"
         }
       },
@@ -112,7 +112,7 @@
         "name": "opportunityRelations",
         "toMany": {
           "type": "OpportunityRelation",
-          "column": "cntct_id",
+          "column": "cntct_number",
           "inverse": "contact"
         }
       },
@@ -120,7 +120,7 @@
         "name": "toDoRelations",
         "toMany": {
           "type": "ToDoRelation",
-          "column": "cntct_id",
+          "column": "cntct_number",
           "inverse": "contact"
         }
       }
@@ -146,8 +146,8 @@
      {
         "name": "account",
         "attr": {
-         "type": "Number",
-         "column": "crmacct_id"
+         "type": "String",
+         "column": "crmacct_number"
         }
      }
     ],
@@ -156,69 +156,8 @@
   {
     "context": "crm",
     "nameSpace": "XM",
-    "type": "Customer",
-    "table": "crmacct",
-    "isExtension": true,
-    "isChild": true,
-    "comment": "Extended by Crm",
-    "relations": [
-      {
-        "column": "crmacct_cust_id",
-        "inverse": "id"
-      }
-    ],
-    "properties": [
-     {
-        "name": "account",
-        "attr": {
-         "type": "Number",
-         "column": "crmacct_id"
-        }
-     },
-     {
-        "name": "contactRelations",
-        "toMany": {
-          "isNested": true,
-          "type": "ContactRelation",
-          "column": "crmacct_id",
-          "inverse": "account"
-        }
-      },
-      {
-        "name": "incidentRelations",
-        "toMany": {
-          "isNested": true,
-          "type": "IncidentRelation",
-          "column": "crmacct_id",
-          "inverse": "account"
-        }
-      },
-      {
-        "name": "opportunityRelations",
-        "toMany": {
-          "isNested": true,
-          "type": "OpportunityRelation",
-          "column": "crmacct_id",
-          "inverse": "account"
-        }
-      },
-      {
-        "name": "toDoRelations",
-        "toMany": {
-          "isNested": true,
-          "type": "ToDoRelation",
-          "column": "crmacct_id",
-          "inverse": "account"
-        }
-      }
-    ],
-    "isSystem": true
-  },
-  {
-    "context": "crm",
-    "nameSpace": "XM",
     "type": "ToDo",
-    "table": "todoitem",
+    "table": "xt.todoiteminfo",
     "isExtension": true,
     "comment": "Extended by Crm",
     "relations": [
@@ -270,7 +209,7 @@
     "context": "crm",
     "nameSpace": "XM",
     "type": "ToDoListItem",
-    "table": "todoitem",
+    "table": "xt.todoiteminfo",
     "isExtension": true,
     "comment": "Extended by Crm",
     "relations": [
@@ -302,7 +241,7 @@
     "context": "crm",
     "nameSpace": "XM",
     "type": "ToDoRelation",
-    "table": "todoitem",
+    "table": "xt.todoiteminfo",
     "isExtension": true,
     "comment": "Extended by Crm",
     "relations": [
@@ -315,15 +254,15 @@
       {
         "name": "incident",
         "attr": {
-          "type": "Number",
-          "column": "todoitem_incdt_id"
+          "type": "String",
+          "column": "incdt_number"
         }
       },
       {
         "name": "opportunity",
         "attr": {
-          "type": "Number",
-          "column": "todoitem_ophead_id"
+          "type": "String",
+          "column": "ophead_number"
         }
       }
     ],
@@ -334,7 +273,7 @@
     "context": "crm",
     "nameSpace": "XM",
     "type": "Incident",
-    "table": "incdt",
+    "table": "xt.incdtxt",
     "isExtension": true,
     "comment": "Extended by Crm",
     "relations": [
@@ -366,7 +305,7 @@
         "name": "toDoRelations",
         "toMany": {
           "type": "ToDoRelation",
-          "column": "incdt_id",
+          "column": "incdt_number",
           "inverse": "incident"
         }
       }
@@ -442,7 +381,7 @@
         "name": "toDoRelations",
         "toMany": {
           "type": "ToDoRelation",
-          "column": "ophead_id",
+          "column": "ophead_number",
           "inverse": "opportunity"
         }
       }

@@ -1,6 +1,6 @@
-/*jshint node:true, bitwise:true, indent:2, curly:true eqeqeq:true, immed:true, latedef:true, newcap:true, noarg:true,
+/*jshint node:true, bitwise:true, indent:2, curly:true, eqeqeq:true, immed:true, latedef:true, newcap:true, noarg:true,
 regexp:true, undef:true, strict:true, trailing:true, white:true */
-/*global X:true */
+/*global X:true, XT:true */
 
 /**
   The X Node.js framework is comprised of 3 major components. The foundation,
@@ -27,6 +27,7 @@ regexp:true, undef:true, strict:true, trailing:true, white:true */
 // Include the foundation that instantiates the
 // X global namespace
 require('./foundation');
+XT = { };
 
 (function () {
   "use strict";
@@ -58,12 +59,11 @@ require('./foundation');
     // special case where the desired output requires calling console directly
     X.io.console(X.StringBuffer.create({ color: 'blue', prefix: null }),
       "\n================================================" +
-      "\nXUPLE NODE.JS FRAMEWORK ({version})".f({ version: X.version || "N/A" }) +
+      "\nXTUPLE NODE.JS SERVER" +
       "\n================================================\n"
     );
 
-    if (X.requireDatabase) require("./database");
-    if (X.requireServer) require("./server");
+    require("./database");
 
     X.pid = process.pid;
 
@@ -76,14 +76,14 @@ require('./foundation');
         X.pidFilePath = _path.join(X.basePath, X.pidFilePath);
       }
       if (!X.pidFileName) {
-        X.pidFileName = "%@.pid".f(X.processName? X.processName: "node_xt_process");
+        X.pidFileName = "%@.pid".f(X.options.processName ? X.options.processName: "node_xt_process");
       } else if (X.pidFileName.indexOf(".pid") === -1) {
         X.pidFileName = X.pidFileName.suf(".pid");
       }
 
       // if we're allowed to have multiples of this resource executing
       // simultaneously we need to make the name unique
-      if (X.allowMultipleInstances === true) {
+      if (X.options.allowMultipleInstances === true) {
         i = X.pidFileName.indexOf(".pid");
         sub = X.pidFileName.substring(0, i);
         X.pidFileName = "%@_%@.pid".f(sub, X.pid);
@@ -93,14 +93,18 @@ require('./foundation');
       X.pidFile = _path.join(X.pidFilePath, X.pidFileName);
 
       X.exists(X.pidFile, function (exists) {
-        if (exists && !X.allowMultupleInstances) {
-          issue(X.fatal("Multiple instances are not allowed"));
+        if (exists && !X.options.allowMultipleInstances) {
+          X.error("Multiple instances are not allowed");
         } else {
 
           // write our pidfile...
           X.exists(_path.join(X.pidFilePath), function (exists) {
-            if (!exists) X.createDir(X.pidFilePath, X.writePidFile);
-            else X.writePidFile();
+            if (!exists) {
+              X.createDir(X.pidFilePath, X.writePidFile);
+            }
+            else {
+              X.writePidFile();
+            }
           });
         }
       });
@@ -109,9 +113,5 @@ require('./foundation');
     // give any running process the opportunity to save state
     // or log as gracefully as possible
     process.once('exit', _.bind(X.cleanup, X));
-
-    _.forEach(["SIGINT", "SIGHUP", "SIGQUIT", "SIGKILL", "SIGSEGV", "SIGILL"], function (sig) {
-      process.once(sig, _.bind(sighandler, X, sig));
-    });
   });
 }());

@@ -1,8 +1,8 @@
 /*jshint node:true, indent:2, curly:false, eqeqeq:true, immed:true, latedef:true, newcap:true, noarg:true,
-regexp:true, undef:true, strict:true, trailing:true, white:true */
-/*global X:true, XM:true, XT:true, console:true, _:true*/
+regexp:true, undef:true, strict:true, trailing:true, white:true, expr:true */
+/*global X:true, SYS: true, XM:true, XT:true, console:true, _:true*/
 
-/*!
+/**
  * Connect - xTuple - PostgreSQL Store
  *
  * connect-xt-pg is a PostgreSQL session store that uses xTuple's glabal database
@@ -46,23 +46,27 @@ module.exports = function (connect) {
 
     options = options || {};
     Store.call(this, options);
-    this.prefix = null == options.prefix ? 'sess:' : options.prefix;
-    this.hybridCache = null == options.hybridCache ? false : options.hybridCache;
+    this.prefix = options.prefix ? options.prefix : 'sess:';
+    this.hybridCache = options.hybridCache ? options.hybridCache : false;
     this.sessions = {};
 
-    // Load all the data from XM.SessionStore into the Express MemoryStore for caching.
+    // Load all the data from SYS.SessionStore into the Express MemoryStore for caching.
     this.loadSessions = function (options, callback) {
       // TODO - options could be used to only load parital dataset of recently active sessions.
       // It could also be used to help process/server syncing if we move to something like Redis.
 
-      var fetchOptions = {};
+      var fetchOptions = {},
+        payload = {
+          nameSpace: "SYS",
+          type: "SessionStore"
+        };
 
-      fetchOptions.success = function (sessionstore) {
+      fetchOptions.success = function (obj, sessionstore, opts) {
         var sid,
             sess;
 
         // Flush any sessions before reloading it.
-        self.sessions = {};
+        self.sessions[options.database] = {};
 
         _.each(sessionstore, function (model, id, collection) {
           sid = model.id;
@@ -73,7 +77,7 @@ module.exports = function (connect) {
             MemoryStore.set(sid, sess, function () {});
           }
 
-          self.sessions[sid] = sess;
+          self.sessions[options.database][sid] = sess;
         });
 
         // Now that sessions are loaded, we'll call the callback that was waiting for them.
@@ -91,46 +95,50 @@ module.exports = function (connect) {
       };
 
       // TODO - This is REALLY SLOW if there are 10,000 sessions in the table and we use collection.fetch().
-      // var sessionsCollection = new XM.SessionStoreCollection();
+      // var sessionsCollection = new SYS.SessionStoreCollection();
       //sessionsCollection.fetch(fetchOptions);
 
-      // Fetch all records from XM.SessionStore and load them into the Express MemoryStore.
-      fetchOptions.query = {
-        requestType: "fetch",
-        recordType: "XM.SessionStore"
-      };
-
+      // Fetch all records from SYS.SessionStore and load them into the Express MemoryStore.
       // fetchOptions.username = GLOBAL_USERNAME; // TODO
       fetchOptions.username = 'node';
-      XT.dataSource.fetch(fetchOptions);
+      fetchOptions.database = options.database;
+      XT.dataSource.request(null, "get", payload, fetchOptions);
     };
 
     // Loops through the sessions, find the ones that are expired and sends that session data
     // to the callback function. This allows us to expire session from code that has access to
     // stuff like socket.io in main.js.
     this.expireSessions = function (callback) {
-      this.loadSessions(null, function (err) {
-        if (err) {
-          return;
-        }
 
-        _.each(self.sessions, function (val, key, list) {
-          var expires = new Date(val.cookie.expires),
-              now = new Date();
-
-          if ((expires - now) <= 0) {
-            //X.debug("Session: ", key, " expired ", (expires - now));
-            callback(key, val);
-          } else {
-            //X.debug("Session: ", key, " expires in ", (expires - now));
+      _.each(X.options.datasource.databases, function (dbval, dbkey, dblist) {
+        self.loadSessions({database: dbval}, function (err) {
+          if (err) {
+            return;
           }
+
+          _.each(X.options.datasource.databases, function (dbval, dbkey, dblist) {
+            _.each(self.sessions[dbval], function (val, key, list) {
+              var expires = new Date(val.cookie.expires),
+                  now = new Date();
+
+              if ((expires - now) <= 0) {
+                //X.debug("Session: ", key, " expired ", (expires - now));
+                callback(key, val);
+              } else {
+                //X.debug("Session: ", key, " expires in ", (expires - now));
+              }
+            });
+          });
         });
       });
     };
 
-    X.debug("XTPGStore SessionStore using hybridCache = ", this.hybridCache);
+    X.log("SessionStore using hybridCache = ", this.hybridCache);
+
     // Prime this.sessions and MemoryCache on initialization.
-    this.loadSessions();
+    _.each(X.options.datasource.databases, function (dbval, dbkey, dblist) {
+      self.loadSessions({database: dbval});
+    });
   }
 
   /**
@@ -158,8 +166,10 @@ module.exports = function (connect) {
             result,
             sessionStore = {};
 
-        sessionStore = new XM.SessionStore();
+        sessionStore = new SYS.SessionStore();
         fetchOptions.id = sid;
+//TODO - This might break.
+        fetchOptions.database = sid.split(".")[0].split(":")[1];
 
         fetchOptions.success = function (model) {
           // We have a matching session store cookie
@@ -167,7 +177,7 @@ module.exports = function (connect) {
           // TODO - update lastModified time to extend timeout?
           // Doing this will complicate things with a hybridCache MemoryStore.
           // Do we really need to set that here for just in XM.Session and have CleanupTask
-          // clean up XM.SessionStore on timeouts?
+          // clean up SYS.SessionStore on timeouts?
           //model.set("lastModified", new Date().getTime());
           //model.save(null, saveOptions);
 
@@ -249,7 +259,7 @@ module.exports = function (connect) {
             sessionAttributes = {},
             sessionStore = {};
 
-        sessionStore = new XM.SessionStore();
+        sessionStore = new SYS.SessionStore();
 
         saveOptions.success = function (model) {
           if (that.hybridCache) {
@@ -269,10 +279,9 @@ module.exports = function (connect) {
             done && done();
           }
         };
-        saveOptions.error = function (model, err) {
-          var that = this;
+        saveOptions.error = function (model, saveErr) {
           // This shouldn't happen. How did we get here? Log trace.
-          console.trace("XM.SessionStore save error. This shouldn't happen.");
+          console.trace("SYS.SessionStore save error. This shouldn't happen.");
 
           if (that.hybridCache) {
             // Delete any match in MemoryStore.
@@ -282,23 +291,26 @@ module.exports = function (connect) {
                 console.trace("MemoryStore.destroy error:");
                 done && done(err);
               } else {
-                // TODO - This might throw an error because our err object does not includes a stack.
+                // TODO - This might throw an error because our err object does not include a stack.
                 // https://github.com/senchalabs/connect/blob/master/lib/middleware/errorHandler.js#L48
                 // MemoryStore destroyed, move along.
-                done && done(that.err);
+                done && done(saveErr);
               }
             });
           } else {
-            // TODO - This might throw an error because our err object does not includes a stack.
+            // TODO - This might throw an error because our err object does not include a stack.
             // https://github.com/senchalabs/connect/blob/master/lib/middleware/errorHandler.js#L48
             // Return nothing and move along.
-            done && done(err);
+            done && done(saveErr);
           }
         };
 
         fetchOptions.id = sid;
+//TODO - This might break.
+        fetchOptions.database = sid.split(".")[0].split(":")[1];
+        saveOptions.database = fetchOptions.database;
 
-        fetchOptions.success = function (model) {
+        fetchOptions.success = function (model, resp) {
           // Fetch found this session, update it and save.
           model.set("session", sess);
 
@@ -322,14 +334,14 @@ module.exports = function (connect) {
               done && done();
             }
           } else if (model.getStatusString() === "READY_DIRTY") {
-            // Try to save XM.SessionStore to database.
+            // Try to save SYS.SessionStore to database.
             model.save(null, saveOptions);
           }
         };
         fetchOptions.error = function (model, err) {
           // Fetch did not find this session, initialize new and save.
-          // Create new XM.SessionStore object.
-          sessionStore = new XM.SessionStore();
+          // Create new SYS.SessionStore object.
+          sessionStore = new SYS.SessionStore();
           // TODO - Is this redundant?  Can I just call model.initialize...???
           sessionStore.initialize(null, {isNew: true});
 
@@ -338,7 +350,7 @@ module.exports = function (connect) {
             session: sess
           };
 
-          // Try to save XM.SessionStore to database.
+          // Try to save SYS.SessionStore to database.
           sessionStore.save(sessionAttributes, saveOptions);
         };
 
@@ -383,12 +395,17 @@ module.exports = function (connect) {
           that = this;
 
       sid = this.prefix + sid;
-      sessionStore = new XM.SessionStore();
+      sessionStore = new SYS.SessionStore();
       fetchOptions.id = sid;
+//TODO - This might break.
+      fetchOptions.database = sid.split(".")[0].split(":")[1];
 
       fetchOptions.success = function (model) {
+        var destroyOptions = {};
+
+        destroyOptions.database = fetchOptions.database;
         // Delete this session from the db store.
-        model.destroy();
+        model.destroy(destroyOptions);
 
         if (that.hybridCache) {
           // Delete this session from the MemoryStore as well.
@@ -439,18 +456,22 @@ module.exports = function (connect) {
    * @api public
    */
   XTPGStore.prototype.all = function (fn) {
-    this.loadSessions(null, function (err) {
-      if (err) {
-        return fn(err);
-      }
+    var self = this;
 
-      var arr = [],
-          keys = Object.keys(this.sessions);
+    _.each(X.options.datasource.databases, function (dbval, dbkey, dblist) {
+      self.loadSessions({database: dbval}, function (err) {
+        if (err) {
+          return fn(err);
+        }
 
-      for (var i = 0, len = keys.length; i < len; ++i) {
-        arr.push(this.sessions[keys[i]]);
-      }
-      fn(null, arr);
+        var arr = [],
+            keys = Object.keys(this.sessions[dbval]);
+
+        for (var i = 0, len = keys.length; i < len; ++i) {
+          arr.push(this.sessions[dbval][keys[i]]);
+        }
+        fn(null, arr);
+      });
     });
   };
 
@@ -461,12 +482,16 @@ module.exports = function (connect) {
    * @api public
    */
   XTPGStore.prototype.length = function (fn) {
-    this.loadSessions(null, function (err) {
-      if (err) {
-        return fn(err);
-      }
+    var self = this;
 
-      fn(null, Object.keys(this.sessions).length);
+    _.each(X.options.datasource.databases, function (dbval, dbkey, dblist) {
+      self.loadSessions({database: dbval}, function (err) {
+        if (err) {
+          return fn(err);
+        }
+
+        fn(null, Object.keys(this.sessions[dbval]).length);
+      });
     });
   };
 

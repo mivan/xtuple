@@ -4,6 +4,8 @@
     "nameSpace": "XM",
     "type": "Url",
     "table": "urlinfo",
+    "isRest": true,
+    "lockable": true,
     "idSequenceName": "urlinfo_url_id_seq",
     "comment": "URL Map",
     "privileges": {
@@ -21,6 +23,14 @@
           "type": "Number",
           "column": "url_id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {

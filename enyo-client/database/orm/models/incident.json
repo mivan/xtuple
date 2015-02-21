@@ -3,9 +3,11 @@
     "context": "xtuple",
     "nameSpace": "XM",
     "type": "Incident",
-    "table": "incdt",
-    "lockable": true,
+    "table": "xt.incdtxt",
     "idSequenceName": "incdt_incdt_id_seq",
+    "isRest": true,
+    "lockable": true,
+    "lockTable": "incdt",
     "orderSequence": "IncidentNumber",
     "comment": "Incident Map",
     "privileges": {
@@ -22,8 +24,15 @@
         "delete": "MaintainPersonalIncidents",
         "properties": [
           "owner.username",
-          "assignedTo.username"
+          "assignedTo.username",
+          "account.number"
         ]
+      },
+      "attribute": {
+        "owner": {
+          "create": "EditOwner",
+          "update": "EditOwner"
+        }
       }
     },
     "properties": [
@@ -38,8 +47,9 @@
       {
         "name": "number",
         "attr": {
-          "type": "Number",
-          "column": "incdt_number"
+          "type": "String",
+          "column": "incdt_number",
+          "isNaturalKey": true
         }
       },
       {
@@ -94,7 +104,8 @@
         "name": "status",
         "attr": {
           "type": "String",
-          "column": "incdt_status"
+          "column": "incdt_status",
+          "required": true
         }
       },
       {
@@ -157,7 +168,8 @@
         "name": "created",
         "attr": {
           "type": "Date",
-          "column": "incdt_timestamp"
+          "column": "incdt_timestamp",
+          "required": true
         }
       },
       {
@@ -256,11 +268,16 @@
           "column": "incdt_id",
           "inverse": "source"
         }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid"
+        }
       }
     ],
-    "isSystem": true,
-    "sourceCode": "INCDT",
-    "extensions": []
+    "isSystem": true
   },
   {
     "context": "xtuple",
@@ -277,6 +294,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -347,16 +372,24 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "number",
         "attr": {
-          "type": "Number",
+          "type": "String",
           "column": "alarm_number"
         }
       },
       {
         "name": "sourceType",
         "attr": {
-          "type": "Number",
+          "type": "String",
           "column": "alarm_source",
           "value": "INCDT"
         }
@@ -433,8 +466,9 @@
     "nameSpace": "XM",
     "type": "IncidentCategory",
     "table": "incdtcat",
-    "lockable": true,
+    "isRest": true,
     "idSequenceName": "incdtcat_incdtcat_id_seq",
+    "lockable": true,
     "comment": "Incident Category Map",
     "privileges": {
       "all": {
@@ -464,7 +498,8 @@
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "incdtcat_name"
+          "column": "incdtcat_name",
+          "isNaturalKey": true
         }
       },
       {
@@ -522,6 +557,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "targetType",
         "attr": {
           "type": "String",
@@ -560,7 +603,6 @@
     "nameSpace": "XM",
     "type": "IncidentListItemCharacteristic",
     "table": "charass",
-    "idSequenceName": "charass_charass_id_seq",
     "comment": "Incident List Item Characteristic Map",
     "privileges": {
       "all": {
@@ -577,6 +619,14 @@
           "type": "Number",
           "column": "charass_id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -641,6 +691,14 @@
           "type": "Number",
           "column": "comment_id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -723,6 +781,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -789,6 +855,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -835,7 +909,6 @@
     "nameSpace": "XM",
     "type": "IncidentHistory",
     "table": "incdthist",
-    "idSequenceName": "incdthist_incdthist_id_seq",
     "comment": "Incident History Map",
     "properties": [
       {
@@ -844,6 +917,14 @@
           "type": "Number",
           "column": "incdthist_id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -903,6 +984,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -949,6 +1038,7 @@
     "nameSpace": "XM",
     "type": "IncidentRelation",
     "table": "xt.incdtinfo",
+    "isRest": true,
     "comment": "Incident Relation Map",
     "privileges": {
       "all": {
@@ -964,7 +1054,8 @@
         "delete": false,
         "properties": [
           "owner.username",
-          "assignedTo.username"
+          "assignedTo.username",
+          "account.number"
         ]
       }
     },
@@ -980,8 +1071,9 @@
       {
         "name": "number",
         "attr": {
-          "type": "Number",
-          "column": "incdt_number"
+          "type": "String",
+          "column": "incdt_number",
+          "isNaturalKey": true
         }
       },
       {
@@ -1026,15 +1118,15 @@
       {
         "name": "account",
         "attr": {
-          "type": "Number",
-          "column": "incdt_crmacct_id"
+          "type": "String",
+          "column": "crmacct_number"
         }
       },
       {
         "name": "contact",
         "attr": {
-          "type": "Number",
-          "column": "incdt_cntct_id"
+          "type": "String",
+          "column": "cntct_number"
         }
       }
     ],
@@ -1045,6 +1137,7 @@
     "nameSpace": "XM",
     "type": "IncidentListItem",
     "table": "xt.incdtinfo",
+    "isRest": true,
     "comment": "Incident List Item Map",
     "privileges": {
       "all": {
@@ -1060,7 +1153,8 @@
         "delete": false,
         "properties": [
           "owner.username",
-          "assignedTo.username"
+          "assignedTo.username",
+          "account.number"
         ]
       }
     },
@@ -1077,7 +1171,8 @@
         "name": "number",
         "attr": {
           "type": "String",
-          "column": "incdt_number"
+          "column": "incdt_number",
+          "isNaturalKey": true
         }
       },
       {
@@ -1221,6 +1316,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -1287,6 +1390,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "parentType",
         "attr": {
           "type": "String",
@@ -1345,8 +1456,9 @@
     "nameSpace": "XM",
     "type": "IncidentResolution",
     "table": "incdtresolution",
-    "lockable": true,
+    "isRest": true,
     "idSequenceName": "incdtresolution_incdtresolution_id_seq",
+    "lockable": true,
     "comment": "Incident Resolution Map",
     "privileges": {
       "all": {
@@ -1369,7 +1481,8 @@
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "incdtresolution_name"
+          "column": "incdtresolution_name",
+          "isNaturalKey": true
         }
       },
       {
@@ -1395,8 +1508,9 @@
     "nameSpace": "XM",
     "type": "IncidentSeverity",
     "table": "incdtseverity",
-    "lockable": true,
+    "isRest": true,
     "idSequenceName": "incdtseverity_incdtseverity_id_seq",
+    "lockable": true,
     "comment": "Incident Severity Map",
     "privileges": {
       "all": {
@@ -1419,7 +1533,8 @@
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "incdtseverity_name"
+          "column": "incdtseverity_name",
+          "isNaturalKey": true
         }
       },
       {
@@ -1462,6 +1577,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -1511,6 +1634,7 @@
     "nameSpace": "XM",
     "type": "IncidentEmailProfile",
     "table": "xt.incdtemlprofile",
+    "isRest": true,
     "idSequenceName": "emlprofile_emlprofile_id_seq",
     "comment": "Incident Email Profile Map",
     "privileges": {
@@ -1534,7 +1658,8 @@
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "emlprofile_name"
+          "column": "emlprofile_name",
+          "isNaturalKey": true
         }
       },
       {

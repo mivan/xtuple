@@ -1,5 +1,5 @@
-/*jshint node:true, indent:2, curly:true eqeqeq:true, immed:true, latedef:true, newcap:true, noarg:true,
-regexp:true, undef:true, trailing:true, white:true */
+/*jshint node:true, indent:2, curly:true, eqeqeq:true, immed:true, latedef:true, newcap:true, noarg:true,
+regexp:true, undef:true, trailing:true, white:true, strict:false */
 /*global XT:true, XV:true, XM:true, Backbone:true, window:true, enyo:true, _:true */
 
 (function () {
@@ -23,134 +23,103 @@ regexp:true, undef:true, trailing:true, white:true */
     name: "XV.ContactWidget",
     kind: "XV.RelationWidget",
     label: "_contact".loc(),
-    collection: "XM.ContactRelationCollection",
-    list: "XV.ContactList",
     keyAttribute: "name",
     nameAttribute: "jobTitle",
     descripAttribute: "phone",
+    collection: "XM.ContactRelationCollection",
+    list: "XV.ContactList",
     published: {
       showAddress: false
     },
-    filterRestrictionType: ["account", "accountParent"],
-    components: [
-      {kind: "FittableColumns", components: [
-        {name: "label", content: "", classes: "xv-decorated-label"},
-        {kind: "onyx.InputDecorator", name: "decorator",
-          classes: "xv-input-decorator", components: [
-          {name: 'input', kind: "onyx.Input", classes: "xv-subinput",
-            onkeyup: "keyUp", onkeydown: "keyDown", onblur: "receiveBlur",
-            onfocus: "receiveFocus"
-          },
-          {kind: "onyx.MenuDecorator", onSelect: "itemSelected", components: [
-            {kind: "onyx.IconButton", src: "/client/lib/enyo-x/assets/triangle-down-large.png",
-              classes: "xv-relationwidget-icon"},
-            {name: 'popupMenu', floating: true, kind: "onyx.Menu",
-              components: [
-              {kind: "XV.MenuItem", name: 'searchItem', content: "_search".loc()},
-              {kind: "XV.MenuItem", name: 'openItem', content: "_open".loc(),
-                disabled: true},
-              {kind: "XV.MenuItem", name: 'newItem', content: "_new".loc(),
-                disabled: true}
-            ]}
-          ]},
-          {name: "completer", kind: "XV.Completer", onSelect: "itemSelected"}
-        ]}
+    descriptionComponents: [
+      {name: "jobTitleRow", controlClasses: "enyo-inline", showing: false, components: [
+        {classes: 'xv-description', name: "name"}
       ]},
-      {kind: "FittableColumns", components: [
-        {name: "labels", classes: "xv-relationwidget-column left",
-          components: [
-          {name: "jobTitleLabel", content: "_jobTitle".loc() + ":",
-            classes: "xv-relationwidget-description label",
-            showing: false},
-          {name: "phoneLabel", content: "_phone".loc() + ":",
-            classes: "xv-relationwidget-description label",
-            showing: false},
-          {name: "alternateLabel", content: "_alternate".loc() + ":",
-            classes: "xv-relationwidget-description label",
-            showing: false},
-          {name: "faxLabel", content: "_fax".loc() + ":",
-            classes: "xv-relationwidget-description label",
-            showing: false},
-          {name: "primaryEmailLabel", content: "_email".loc() + ":",
-            classes: "xv-relationwidget-description label",
-            showing: false},
-          {name: "webAddressLabel", content: "_web".loc() + ":",
-            classes: "xv-relationwidget-description label",
-            showing: false},
-          {name: "addressLabel", content: "_address".loc() + ":",
-            classes: "xv-relationwidget-description label",
-            showing: false}
-        ]},
-        {name: "data", fit: true, components: [
-          {name: "name", classes: "xv-relationwidget-description hasLabel"},
-          {name: "description", classes: "xv-relationwidget-description hasLabel"},
-          {name: "alternate", classes: "xv-relationwidget-description hasLabel"},
-          {name: "fax", classes: "xv-relationwidget-description hasLabel"},
-          {name: "primaryEmail", ontap: "sendMail",
-            classes: "xv-relationwidget-description hasLabel hyperlink"},
-          {name: "webAddress", ontap: "openWindow",
-            classes: "xv-relationwidget-description hasLabel hyperlink"},
-          {name: "address", classes: "xv-relationwidget-description hasLabel",
-            allowHtml: true}
-        ]}
+      {name: "phoneRow", controlClasses: "enyo-inline", showing: false, components: [
+        {classes: "xv-description hyperlink", target: '_blank', name: "description"}
+      ]},
+      {name: "alternateRow", controlClasses: "enyo-inline", showing: false, components: [
+        {classes: "xv-description hyperlink", target: "_blank", name: "alternate"}
+      ]},
+      {name: "faxRow", controlClasses: "enyo-inline", showing: false, components: [
+        {classes: "xv-description hyperlink", target: "_blank", name: "fax"}
+      ]},
+      {name: "emailRow", controlClasses: "enyo-inline", showing: false, components: [
+        {classes: 'xv-description hyperlink', target: "_blank", name: "email"}
+      ]},
+      {name: "webAddressRow", controlClasses: "enyo-inline", showing: false, components: [
+        {classes: 'xv-description hyperlink', target: "_blank", name: "webAddress"}
+      ]},
+      {name: "addressRow", controlClasses: "enyo-inline", showing: false, components: [
+        {classes: "xv-description", name: "address", allowHtml: true}
       ]}
     ],
-    disabledChanged: function () {
-      this.inherited(arguments);
-      var disabled = this.getDisabled();
-      if (this.$.phone) {
-        this.$.jobTitle.addRemoveClass("disabled", disabled);
-        this.$.phone.addRemoveClass("disabled", disabled);
-        this.$.alternate.addRemoveClass("disabled", disabled);
-        this.$.fax.addRemoveClass("disabled", disabled);
-        this.$.primaryEmail.addRemoveClass("disabled", disabled);
-        this.$.webAddress.addRemoveClass("disabled", disabled);
-      }
-    },
     setValue: function (value, options) {
       this.inherited(arguments);
+
       if (value && !value.get) {
         // the value of the widget is still being fetched asyncronously.
         // when the value is fetched, this function will be run again,
         // so for now we can just stop here.
         return;
       }
-      var jobTitle = value ? value.get('jobTitle') : "",
-        phone = value ? value.get('phone') : "",
-        alternate = value ? value.get('alternate') : "",
-        fax = value ? value.get('fax') : "",
-        primaryEmail = value ? value.get('primaryEmail') : "",
-        webAddress = value ? value.get('webAddress') : "",
-        address = value ? XM.Address.format(value.get('address')) : "",
+
+      // The rows are here because sometimes the values needs labels
+      // to go with the values.
+      var jobTitle = value ? value.get("jobTitle") : "",
+        phone = value ? value.get("phone") : "",
+        alternate = value ? value.get("alternate") : "",
+        fax = value ? value.get("fax") : "",
+        primaryEmail = value ? value.get("primaryEmail") : "",
+        webAddress = value ? value.get("webAddress") : "",
+        address = value ? XM.Address.format(value.get("address")) : "",
         showAddress = this.getShowAddress();
-      this.$.jobTitleLabel.setShowing(jobTitle);
-      this.$.phoneLabel.setShowing(phone);
-      this.$.alternate.setShowing(alternate);
+
+      this.$.jobTitleRow.setShowing(!!jobTitle);
+      this.$.name.setContent(jobTitle);
+
+      this.$.phoneRow.setShowing(!!phone);
+      this.$.description.setContent(phone);
+      this.$.description.setAttribute('href', 'tel://' + phone);
+
+      this.$.alternateRow.setShowing(!!alternate);
       this.$.alternate.setContent(alternate);
-      this.$.alternateLabel.setShowing(alternate);
-      this.$.fax.setShowing(fax);
+      this.$.alternate.setAttribute('href', 'tel://' + alternate);
+
+      this.$.faxRow.setShowing(!!fax);
       this.$.fax.setContent(fax);
-      this.$.faxLabel.setShowing(fax);
-      this.$.primaryEmail.setShowing(primaryEmail);
-      this.$.primaryEmail.setContent(primaryEmail);
-      this.$.primaryEmailLabel.setShowing(primaryEmail);
-      this.$.webAddress.setShowing(webAddress);
+      this.$.fax.setAttribute('href', 'tel://' + fax);
+
+      this.$.emailRow.setShowing(!!primaryEmail);
+      this.$.email.setContent(primaryEmail);
+      this.$.email.setAttribute('href', 'mailto:' + primaryEmail);
+
+      this.$.webAddressRow.setShowing(!!webAddress);
       this.$.webAddress.setContent(webAddress);
-      this.$.webAddressLabel.setShowing(webAddress);
-      this.$.address.setShowing(address && showAddress);
-      this.$.addressLabel.setShowing(address && showAddress);
-      if (showAddress) { this.$.address.setContent(address); }
+      this.$.webAddress.setAttribute('href', '//' + alternate);
+
+      this.$.addressRow.setShowing(address && showAddress);
+      this.$.address.setContent(address);
     },
     openWindow: function () {
-      var address = this.value ? this.value.get('webAddress') : null;
-      if (address) { window.open('http://' + address); }
+      var address = this.value ? this.value.get("webAddress") : null;
+      if (address) { window.open("http://" + address); }
+      return true;
+    },
+    callPhone: function () {
+      var phoneNumber = this.value ? this.value.get("phone") : null,
+        win;
+      if (phoneNumber) {
+        win = window.open("tel://" + phoneNumber);
+        win.close();
+      }
       return true;
     },
     sendMail: function () {
-      var email = this.value ? this.value.get('primaryEmail') : null,
+      var email = this.value ? this.value.get("primaryEmail") : null,
         win;
       if (email) {
-        win = window.open('mailto:' + email);
+        win = window.open("mailto:" + email);
         win.close();
       }
       return true;
@@ -166,6 +135,32 @@ regexp:true, undef:true, trailing:true, white:true */
     kind: "XV.RelationWidget",
     collection: "XM.CustomerRelationCollection",
     list: "XV.CustomerList"
+  });
+
+  enyo.kind({
+    name: "XV.BillingCustomerWidget",
+    kind: "XV.RelationWidget",
+    collection: "XM.BillingCustomerCollection",
+    query: { parameters: [{attribute: "isActive", value: true}]},
+    list: "XV.CustomerList"
+  });
+
+  enyo.kind({
+    name: "XV.SalesCustomerWidget",
+    kind: "XV.RelationWidget",
+    collection: "XM.SalesCustomerCollection",
+    list: "XV.CustomerList"
+  });
+
+  // ..........................................................
+  // CUSTOMER GROUP
+  //
+  enyo.kind({
+    name: "XV.CustomerGroupWidget",
+    kind: "XV.RelationWidget",
+    collection: "XM.CustomerGroupCollection",
+    keyAttribute: "name",
+    list: "XV.CustomerGroupList"
   });
 
   // ..........................................................
@@ -191,28 +186,14 @@ regexp:true, undef:true, trailing:true, white:true */
         components: [
           {content: "_customerOrProspect".loc()},
           {tag: "br"},
-          {kind: "onyx.Button", content: "_customer".loc(), ontap: "newCustomer",
+          {kind: "onyx.Button", name: "customerButton", content: "_customer".loc(), ontap: "popupTapped",
             classes: "onyx-blue xv-popup-button"},
-          {kind: "onyx.Button", content: "_prospect".loc(), ontap: "newProspect",
+          {kind: "onyx.Button", name: "prospectButton", content: "_prospect".loc(), ontap: "popupTapped",
             classes: "onyx-blue xv-popup-button"}
         ]
       });
       this.$.newItem.setDisabled(false);
       return ret;
-    },
-    newCustomer: function () {
-      this.$.customerOrProspectPopup.hide();
-      this.doWorkspace({
-        workspace: "XV.CustomerWorkspace",
-        allowNew: false
-      });
-    },
-    newProspect: function () {
-      this.$.customerOrProspectPopup.hide();
-      this.doWorkspace({
-        workspace: "XV.ProspectWorkspace",
-        allowNew: false
-      });
     },
     /**
      @menuItemSelected
@@ -224,12 +205,12 @@ regexp:true, undef:true, trailing:true, white:true */
         menuItem = inEvent.originator,
         list = this.getList(),
         model = this.getValue(),
-        id = model ? model.id : null,
-        workspace = this._List ? this._List.prototype.getWorkspace() : null,
+        K, status, id, workspace,
         callback;
+
       switch (menuItem.name)
       {
-      case 'searchItem':
+      case "searchItem":
         callback = function (value) {
           that.setValue(value);
         };
@@ -239,17 +220,46 @@ regexp:true, undef:true, trailing:true, white:true */
           callback: callback
         });
         break;
-      case 'openItem':
+      case "openItem":
+        K = model.getClass();
+        status = model.get("status");
+        id = model ? model.id : null;
+        workspace = status === K.PROSPECT_STATUS ? "XV.ProspectWorkspace" : "XV.CustomerWorkspace";
+
         this.doWorkspace({
           workspace: workspace,
           id: id,
           allowNew: false
         });
         break;
-      case 'newItem':
+      case "newItem":
         this.$.customerOrProspectPopup.show();
       }
-    }
+    },
+    popupTapped: function (inSender, inEvent) {
+      var that = this,
+        callback = function (model) {
+          if (!model) { return; }
+          var Model = that._collection.model,
+            attrs = {},
+            value,
+            options = {};
+          options.success = function () {
+            that.setValue(value);
+          };
+          attrs[Model.prototype.idAttribute] = model.id;
+          value = Model.findOrCreate(attrs);
+          value.fetch(options);
+        };
+
+      this.$.customerOrProspectPopup.hide();
+      this.doWorkspace({
+        callback: callback,
+        workspace: inEvent.originator.name === "customerButton" ?
+          "XV.CustomerWorkspace" : "XV.ProspectWorkspace",
+        allowNew: false
+      });
+    },
   });
 
   // ..........................................................
@@ -260,10 +270,19 @@ regexp:true, undef:true, trailing:true, white:true */
     name: "XV.CustomerShiptoWidget",
     kind: "XV.RelationWidget",
     collection: "XM.CustomerShiptoRelationCollection",
-    list: "XV.CustomerShiptoList",
-    filterRestrictionType: ["customer"]
+    list: "XV.CustomerShiptoList"
   });
 
+  // ..........................................................
+  // DEPARTMENT
+  //
+
+  enyo.kind({
+    name: "XV.DepartmentWidget",
+    kind: "XV.RelationWidget",
+    collection: "XM.DepartmentCollection",
+    list: "XV.DepartmentList"
+  });
 
   // ..........................................................
   // EMPLOYEE
@@ -273,7 +292,20 @@ regexp:true, undef:true, trailing:true, white:true */
     name: "XV.EmployeeWidget",
     kind: "XV.RelationWidget",
     collection: "XM.EmployeeRelationCollection",
-    list: "XV.EmployeeList"
+    list: "XV.EmployeeList",
+    keyAttribute: "code"
+  });
+
+  // ..........................................................
+  // EXPENSE CATEGORY
+  //
+
+  enyo.kind({
+    name: "XV.ExpenseCategoryWidget",
+    kind: "XV.RelationWidget",
+    collection: "XM.ExpenseCategoryCollection",
+    list: "XV.ExpenseCategoryList",
+    keyAttribute: "code"
   });
 
   // ..........................................................
@@ -302,36 +334,16 @@ regexp:true, undef:true, trailing:true, white:true */
   });
 
   // ..........................................................
-  // ITEM SITE
+  // LEDGER ACCOUNT
   //
 
   enyo.kind({
-    name: "XV.ItemSiteWidget",
+    name: "XV.LedgerAccountWidget",
     kind: "XV.RelationWidget",
-    collection: "XM.ItemSiteRelationCollection",
-    list: "XV.ItemSiteList",
-    published: {
-      defaultSite: null // {XM.SiteRelation}
-    },
-    keyAttribute: "item.number",
-    sidecarAttribute: "site.code",
-    nameAttribute: "item.description1",
-    descripAttribute: "item.description2",
-    /**
-      Make sure the collection knows about the bespoke filter,
-      because it's the collection that has to decide to use
-      a dispatch with the bespoke filter if it's there.
-     */
-    bespokeFilterChanged: function (inSender, inEvent) {
-      this._collection.bespokeFilter = this.getBespokeFilter();
-    },
-    /**
-      Make sure the collection knows about the default site,
-      because it is used to sort the results.
-     */
-    defaultSiteChanged: function (inSender, inEvent) {
-      this._collection.defaultSite = this.getDefaultSite();
-    }
+    collection: "XM.LedgerAccountRelationCollection",
+    list: "XV.LedgerAccountList",
+    keyAttribute: "name",
+    nameAttribute: "description"
   });
 
   // ..........................................................
@@ -342,6 +354,7 @@ regexp:true, undef:true, trailing:true, white:true */
     name: "XV.OpportunityWidget",
     kind: "XV.RelationWidget",
     collection: "XM.OpportunityRelationCollection",
+    keyAttribute: "name",
     list: "XV.OpportunityList"
   });
 
@@ -353,7 +366,51 @@ regexp:true, undef:true, trailing:true, white:true */
     name: "XV.ProjectWidget",
     kind: "XV.RelationWidget",
     collection: "XM.ProjectRelationCollection",
-    list: "XV.ProjectList"
+    list: "XV.ProjectList",
+    create: function () {
+      this.inherited(arguments);
+      this.setShowing(XT.session.settings.get("UseProjects"));
+    },
+    setShowing: function (showing) {
+      if (!showing || showing && XT.session.settings.get("UseProjects")) {
+        this.inherited(arguments);
+      }
+    }
+  });
+
+  // ..........................................................
+  // PURCHASE ORDER
+  //
+
+  enyo.kind({
+    name: "XV.PurchaseOrderWidget",
+    kind: "XV.RelationWidget",
+    collection: "XM.PurchaseOrderRelationCollection",
+    keyAttribute: "number",
+    list: "XV.PurchaseOrderList"
+  });
+
+  // ..........................................................
+  // SALES ORDER
+  //
+
+  enyo.kind({
+    name: "XV.SalesOrderWidget",
+    kind: "XV.RelationWidget",
+    collection: "XM.SalesOrderRelationCollection",
+    keyAttribute: "number",
+    list: "XV.SalesOrderList"
+  });
+
+  // ..........................................................
+  // SHIFT
+  //
+
+  enyo.kind({
+    name: "XV.ShiftWidget",
+    kind: "XV.RelationWidget",
+    collection: "XM.ShiftCollection",
+    list: "XV.ShiftList"
   });
 
   // ..........................................................
@@ -362,11 +419,24 @@ regexp:true, undef:true, trailing:true, white:true */
 
   enyo.kind({
     name: "XV.UserAccountWidget",
+    classes: "xv-useraccount-widget",
     kind: "XV.RelationWidget",
     collection: "XM.UserAccountRelationCollection",
     list: "XV.UserAccountList",
     keyAttribute: "username",
     nameAttribute: "properName"
+  });
+
+  // ..........................................................
+  // VENDOR
+  //
+
+  enyo.kind({
+    name: "XV.VendorWidget",
+    kind: "XV.RelationWidget",
+    collection: "XM.VendorRelationCollection",
+    keyAttribute: "number",
+    list: "XV.VendorList"
   });
 
 }());

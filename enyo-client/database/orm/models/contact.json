@@ -4,8 +4,9 @@
     "nameSpace": "XM",
     "type": "Contact",
     "table": "cntct",
-    "lockable": true,
     "idSequenceName": "cntct_cntct_id_seq",
+    "isRest": true,
+    "lockable": true,
     "orderSequence": "ContactNumber",
     "comment": "Contact Map",
     "privileges": {
@@ -21,8 +22,20 @@
         "update": "MaintainPersonalContacts",
         "delete": "MaintainPersonalContacts",
         "properties": [
-          "owner.username"
+          "owner.username",
+          "crmaccountUsers"
         ]
+      },
+      "attribute": {
+        "owner": {
+          "create": "EditOwner",
+          "update": "EditOwner"
+        },
+        "crmaccountUsers": {
+          "view": false,
+          "create": false,
+          "update": false
+        }
       }
     },
     "properties": [
@@ -38,7 +51,8 @@
         "name": "number",
         "attr": {
           "type": "String",
-          "column": "cntct_number"
+          "column": "cntct_number",
+          "isNaturalKey": true
         }
       },
       {
@@ -100,35 +114,35 @@
       {
         "name": "phone",
         "attr": {
-          "type": "String",
+          "type": "Phone",
           "column": "cntct_phone"
         }
       },
       {
         "name": "alternate",
         "attr": {
-          "type": "String",
+          "type": "Phone",
           "column": "cntct_phone2"
         }
       },
       {
         "name": "fax",
         "attr": {
-          "type": "String",
+          "type": "Phone",
           "column": "cntct_fax"
         }
       },
       {
         "name": "primaryEmail",
         "attr": {
-          "type": "String",
+          "type": "Email",
           "column": "cntct_email"
         }
       },
       {
         "name": "webAddress",
         "attr": {
-          "type": "String",
+          "type": "Url",
           "column": "cntct_webaddr"
         }
       },
@@ -235,16 +249,24 @@
           "inverse": "source",
           "isNested": true
         }
+      },
+      {
+        "name": "crmaccountUsers",
+        "toMany": {
+          "type": "ShareUsers",
+          "column": "obj_uuid",
+          "inverse": "uuid"
+        }
       }
     ],
-    "isSystem": true,
-    "sourceCode": "T"
+    "isSystem": true
   },
   {
     "context": "xtuple",
     "nameSpace": "XM",
     "type": "ContactInfo",
     "table": "cntct",
+    "isRest": true,
     "idSequenceName": "cntct_cntct_id_seq",
     "orderSequence": "ContactNumber",
     "comment": "Contact Info Map",
@@ -261,7 +283,8 @@
         "update": "MaintainPersonalContacts",
         "delete": "MaintainPersonalContacts",
         "properties": [
-          "owner.username"
+          "owner.username",
+          "account.number"
         ]
       }
     },
@@ -278,7 +301,8 @@
         "name": "number",
         "attr": {
           "type": "String",
-          "column": "cntct_number"
+          "column": "cntct_number",
+          "isNaturalKey": true
         }
       },
       {
@@ -340,35 +364,35 @@
       {
         "name": "phone",
         "attr": {
-          "type": "String",
+          "type": "Phone",
           "column": "cntct_phone"
         }
       },
       {
         "name": "alternate",
         "attr": {
-          "type": "String",
+          "type": "Phone",
           "column": "cntct_phone2"
         }
       },
       {
         "name": "fax",
         "attr": {
-          "type": "String",
+          "type": "Phone",
           "column": "cntct_fax"
         }
       },
       {
         "name": "primaryEmail",
         "attr": {
-          "type": "String",
+          "type": "Email",
           "column": "cntct_email"
         }
       },
       {
         "name": "webAddress",
         "attr": {
-          "type": "String",
+          "type": "Url",
           "column": "cntct_webaddr"
         }
       },
@@ -423,6 +447,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -492,6 +524,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "targetType",
         "attr": {
           "type": "String",
@@ -530,7 +570,6 @@
     "nameSpace": "XM",
     "type": "ContactListItemCharacteristic",
     "table": "charass",
-    "idSequenceName": "charass_charass_id_seq",
     "comment": "Contact List Item Characteristic Map",
     "privileges": {
       "all": {
@@ -547,6 +586,14 @@
           "type": "Number",
           "column": "charass_id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -614,6 +661,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -647,7 +702,8 @@
         "name": "isPublic",
         "attr": {
           "type": "Boolean",
-          "column": "comment_public"
+          "column": "comment_public",
+          "value": true
         }
       },
       {
@@ -690,6 +746,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -759,6 +823,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "contact",
         "attr": {
           "type": "Number",
@@ -768,8 +840,9 @@
       {
         "name": "email",
         "attr": {
-          "type": "String",
-          "column": "cntcteml_email"
+          "type": "Email",
+          "column": "cntcteml_email",
+          "required": true
         }
       }
     ],
@@ -798,6 +871,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -846,7 +927,8 @@
     "context": "xtuple",
     "nameSpace": "XM",
     "type": "ContactListItem",
-    "table": "cntct",
+    "table": "xt.cntctinfo",
+    "isRest": true,
     "comment": "Contact List Item Map",
     "privileges": {
       "all": {
@@ -861,7 +943,8 @@
         "update": false,
         "delete": false,
         "properties": [
-          "owner.username"
+          "owner.username",
+          "account.number"
         ]
       }
     },
@@ -872,6 +955,14 @@
           "type": "Number",
           "column": "cntct_id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "number",
+        "attr": {
+          "type": "String",
+          "column": "cntct_number",
+          "isNaturalKey": true
         }
       },
       {
@@ -912,35 +1003,35 @@
       {
         "name": "phone",
         "attr": {
-          "type": "String",
+          "type": "Phone",
           "column": "cntct_phone"
         }
       },
       {
         "name": "alternate",
         "attr": {
-          "type": "String",
+          "type": "Phone",
           "column": "cntct_phone2"
         }
       },
       {
         "name": "fax",
         "attr": {
-          "type": "String",
+          "type": "Phone",
           "column": "cntct_fax"
         }
       },
       {
         "name": "primaryEmail",
         "attr": {
-          "type": "String",
+          "type": "Email",
           "column": "cntct_email"
         }
       },
       {
         "name": "webAddress",
         "attr": {
-          "type": "String",
+          "type": "Url",
           "column": "cntct_webaddr"
         }
       },
@@ -977,36 +1068,24 @@
           "inverse": "contact",
           "isNested": true
         }
-      }
-    ],
-    "extensions": [
+      },
       {
-        "table": "crmacct",
-        "nameSpace": "XM",
-        "relations": [
-          {
-            "column": "crmacct_id",
-            "inverse": "account"
-          }
-        ],
-        "properties": [
-          {
-            "name": "accountParent",
-            "attr": {
-              "type": "Number",
-              "column": "crmacct_parent_id"
-            }
-          }
-        ]
+        "name": "accountParent",
+        "attr": {
+          "type": "String",
+          "column": "crmacct_parent_number"
+        }
       }
     ],
+    "extensions": [],
     "isSystem": true
   },
   {
     "context": "xtuple",
     "nameSpace": "XM",
     "type": "ContactRelation",
-    "table": "cntct",
+    "table": "xt.cntctinfo",
+    "isRest": true,
     "comment": "Contact Relation Map",
     "privileges": {
       "all": {
@@ -1021,7 +1100,8 @@
         "update": false,
         "delete": false,
         "properties": [
-          "owner.username"
+          "owner.username",
+          "account.number"
         ]
       }
     },
@@ -1032,6 +1112,14 @@
           "type": "Number",
           "column": "cntct_id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "number",
+        "attr": {
+          "type": "String",
+          "column": "cntct_number",
+          "isNaturalKey": true
         }
       },
       {
@@ -1049,6 +1137,13 @@
         }
       },
       {
+        "name": "honorific",
+        "attr": {
+          "type": "String",
+          "column": "cntct_honorific"
+        }
+      },
+      {
         "name": "firstName",
         "attr": {
           "type": "String",
@@ -1056,10 +1151,24 @@
         }
       },
       {
+        "name": "middleName",
+        "attr": {
+          "type": "String",
+          "column": "cntct_middle"
+        }
+      },
+      {
         "name": "lastName",
         "attr": {
           "type": "String",
           "column": "cntct_last_name"
+        }
+      },
+      {
+        "name": "suffix",
+        "attr": {
+          "type": "String",
+          "column": "cntct_suffix"
         }
       },
       {
@@ -1072,35 +1181,35 @@
       {
         "name": "phone",
         "attr": {
-          "type": "String",
+          "type": "Phone",
           "column": "cntct_phone"
         }
       },
       {
         "name": "alternate",
         "attr": {
-          "type": "String",
+          "type": "Phone",
           "column": "cntct_phone2"
         }
       },
       {
         "name": "fax",
         "attr": {
-          "type": "String",
+          "type": "Phone",
           "column": "cntct_fax"
         }
       },
       {
         "name": "primaryEmail",
         "attr": {
-          "type": "String",
+          "type": "Email",
           "column": "cntct_email"
         }
       },
       {
         "name": "webAddress",
         "attr": {
-          "type": "String",
+          "type": "Url",
           "column": "cntct_webaddr"
         }
       },
@@ -1124,32 +1233,19 @@
       {
         "name": "account",
         "attr": {
-          "type": "Number",
-          "column": "cntct_crmacct_id"
+          "type": "String",
+          "column": "crmacct_number"
+        }
+      },
+      {
+        "name": "accountParent",
+        "attr": {
+          "type": "String",
+          "column": "crmacct_parent_number"
         }
       }
     ],
-    "extensions": [
-      {
-        "table": "crmacct",
-        "nameSpace": "XM",
-        "relations": [
-          {
-            "column": "crmacct_id",
-            "inverse": "account"
-          }
-        ],
-        "properties": [
-          {
-            "name": "accountParent",
-            "attr": {
-              "type": "Number",
-              "column": "crmacct_parent_id"
-            }
-          }
-        ]
-      }
-    ],
+    "extensions": [],
     "isSystem": true
   },
   {
@@ -1174,6 +1270,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -1243,6 +1347,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -1289,8 +1401,9 @@
     "nameSpace": "XM",
     "type": "Honorific",
     "table": "hnfc",
-    "lockable": true,
+    "isRest": true,
     "idSequenceName": "hnfc_hnfc_id_seq",
+    "lockable": true,
     "comment": "Honorific Map",
     "privileges": {
       "all": {
@@ -1313,7 +1426,8 @@
         "name": "code",
         "attr": {
           "type": "String",
-          "column": "hnfc_code"
+          "column": "hnfc_code",
+          "isNaturalKey": true
         }
       }
     ],

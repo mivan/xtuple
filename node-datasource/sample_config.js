@@ -1,5 +1,5 @@
-/*jshint node:true, indent:2, curly:false, eqeqeq:true, immed:true, latedef:true, newcap:true, noarg:true,
-regexp:true, undef:true, strict:true, trailing:true, white:true */
+/*jshint node:true, indent:2, curly:false, eqeqeq:true, immed:true, latedef:true,
+newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true, white:true */
 /*global */
 
 (function () {
@@ -7,21 +7,30 @@ regexp:true, undef:true, strict:true, trailing:true, white:true */
 
   module.exports = {
     processName: "node-datasource",
-    debugging: true,
     allowMultipleInstances: true,
-    requireDatabase: true,
-    requireServer: true,
-    requireCache: true,
-    functorsDirectory: "./lib/functors",
-    routesDirectory: "./lib/routes",
-    routersDirectory: "./lib/routers",
-    enhancedAuthKey: "xTuple",
+    client: {
+      freeDemo: false,
+      encoding: "rjson"
+    },
     datasource: {
-      bindAddress: "localhost",
-      port: 443,
+      debugging: false,
+      debugDatabase: false,
+      enhancedAuthKey: "xTuple",
+      sessionTimeout: 60,
+      requireCache: true,
+      pgPoolSize: 15,
+      pgWorker: false,
+      bindAddress: "0.0.0.0",
+      redirectPort: 8888,
+      // proxyPort is the port the app will be redirected to
+      // this is useful if there is a proxy in front of the app listening
+      // on a different port
+      proxyPort: null,
+      port: 8443,
+      encryptionKeyFile: "./lib/private/encryption_key.txt",
       keyFile: "./lib/private/key.pem",
       certFile: "./lib/private/server.crt",
-      caFile: null,
+      caFile: null, // needs to be an array of strings
       saltFile: "./lib/private/salt.txt",
       xTupleDbDir: "/usr/local/xtuple/databases",
       psqlPath: "psql",
@@ -29,13 +38,11 @@ regexp:true, undef:true, strict:true, trailing:true, white:true */
 
       // These fields need to be filled in for the datasource
       // to be able to email
-      smtpHost: "mercury.xtuple.com",
+      smtpHost: "",
       smtpPort: 587,
-      smtpUser: "_smtp_user_",
-      smtpPassword: "_smtp_password_",
-
-      // URL of BI server
-      biUrl: "http://your.bi.solution/report.html?args=sample",
+      smtpUser: "",
+      smtpPassword: "",
+      printer: "",
 
       // these properties are dynamically registered with the
       // node discovery service
@@ -51,26 +58,27 @@ regexp:true, undef:true, strict:true, trailing:true, white:true */
 
       // human-friendly location identifier for various cloud, physical
       // servers, etc.
-      location: "NA"
+      location: "NA",
+      // Add each database to the array.
+      databases: ["dev"],
+      testDatabase: "" // this must remain empty for production datasources
     },
-    administratorInterface: {
-      port: 9090
+    integration: {
     },
-    globalDatabase: {
+    extensionRoutes: [],
+    databaseServer: {
       hostname: "localhost",
       port: 5432,
-      database: "global",
       user: "admin",
-      password: "admin",
-      nodeUsername: "node"
+      password: "admin"
     },
-    required: [
-      "lib/ext/session",
-      "lib/ext/database",
-      "lib/ext/router",
-      "lib/servers",
-      "lib/ext/datasource",
-      "lib/ext/models"
-    ]
+    biServer: {
+      bihost: "localhost",
+      port: 8080,
+      httpsport: 8443,
+      catalog: "xTuple",
+      tenantname: "default",
+      restkeyfile: "/etc/xtuple/lib/rest-keys"
+    }
   };
 }());

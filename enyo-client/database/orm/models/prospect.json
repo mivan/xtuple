@@ -4,8 +4,9 @@
     "nameSpace": "XM",
     "type": "Prospect",
     "table": "prospect",
-    "lockable": true,
+    "isRest": true,
     "idSequenceName": "cust_cust_id_seq",
+    "lockable": true,
     "orderSequence": "CRMAccountNumber",
     "comment": "Prospect Map",
     "privileges": {
@@ -29,14 +30,17 @@
         "name": "number",
         "attr": {
           "type": "String",
-          "column": "prospect_number"
+          "column": "prospect_number",
+          "isNaturalKey":true,
+          "required": true
         }
       },
       {
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "prospect_name"
+          "column": "prospect_name",
+          "required": true
         }
       },
       {
@@ -92,7 +96,8 @@
             "name": "isActive",
             "attr": {
               "type": "Boolean",
-              "column": "crmacct_active"
+              "column": "crmacct_active",
+              "required": true
             }
           }
         ]
@@ -105,6 +110,7 @@
     "nameSpace": "XM",
     "type": "ProspectRelation",
     "table": "prospect",
+    "isRest": true,
     "comment": "Prospect Relation Map",
     "privileges": {
       "all": {
@@ -127,7 +133,8 @@
         "name": "number",
         "attr": {
           "type": "String",
-          "column": "prospect_number"
+          "column": "prospect_number",
+          "isNaturalKey":true
         }
       },
       {

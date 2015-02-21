@@ -1,6 +1,6 @@
 /*jshint node:true, indent:2, curly:false, eqeqeq:true, immed:true, latedef:true, newcap:true, noarg:true,
 regexp:true, undef:true, strict:true, trailing:true, white:true */
-/*global X:true, XM:true, console:true*/
+/*global X:true, SYS:true, XM:true, console:true*/
 
 /*
   Beware that we don't actually verify the password here. We
@@ -10,22 +10,23 @@ regexp:true, undef:true, strict:true, trailing:true, white:true */
   Note also that I'm assuming all users are off their
   old MD5 passwords by now.
 */
-exports.findByUsername = function (username, done) {
+exports.findByUsername = function (username, database, done) {
   "use strict";
-  var user = new XM.User(),
+
+  var user = new SYS.User(),
     options = {};
 
   options.success = function (res) {
     done(null, res);
   };
 
-  options.error = function (res, err) {
-    if (err.code === 'xt1007') {
+  options.error = function (err, res) {
+    if (res.code === 'xt1007') {
       // XXX should "result not found" really be an error?
       done(null, false);
     } else {
       X.log("Error authenticating user", arguments);
-      done(err);
+      done(res);
     }
   };
 
@@ -33,11 +34,49 @@ exports.findByUsername = function (username, done) {
   options.id = username;
 
   // The user under whose authority the query is run.
-  options.username = X.options.globalDatabase.nodeUsername;
+  options.username = X.options.databaseServer.user;
+  options.database = database;
 
   user.fetch(options);
 };
 
+/* broken by 20254
+exports.findByUserOrg = function (username, org, done) {
+  "use strict";
+
+  var userOrg = new XM.UserOrganizationCollection(),
+      options = {};
+
+  options.success = function (res) {
+    if (res.models.length !== 1) {
+      var message = "Error fetching User Organization.";
+      X.log(message);
+      return done(null, null);
+    }
+
+    return done(null, res.models[0]);
+  };
+
+  options.error = function (err, res) {
+    if (err.code === 'xt1007') {
+      // XXX should "result not found" really be an error?
+      return done(null, null);
+    } else {
+      var message = "Error fetching User Organization.";
+      X.log(message);
+      return done(new Error(message));
+    }
+  };
+
+  options.query = {};
+  options.query.parameters = [
+    {attribute: "user", value: username},
+    {attribute: "name", value: org}
+  ];
+
+  userOrg.fetch(options);
+};
+*/
 
 
     // TODO We might want to use this again in order to increase the
@@ -76,8 +115,8 @@ exports.findByUsername = function (username, done) {
 
       options.id = data.id;
       options.password = data.md5pass;
-      options.username = X.options.globalDatabase.nodeUsername;
-      saveOptions.username = X.options.globalDatabase.nodeUsername;
+      options.username = X.options.databaseServer.user;
+      saveOptions.username = X.options.databaseServer.user;
 
       // Reload the user so we have access privs.
       user.fetch(options);

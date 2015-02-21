@@ -1,7 +1,7 @@
 select xt.install_js('XM','crm','crm', $$
-  /* Copyright (c) 1999-2011 by OpenMFG LLC, d/b/a xTuple. 
+  /* Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple.
      See www.xm.ple.com/CPAL for the full text of the software license. */
-  
+
   XM.Crm = {};
 
   XM.Crm.isDispatchable = true,
@@ -23,7 +23,7 @@ select xt.install_js('XM','crm','crm', $$
     "IncidentClosedColor"
   ]
 
-  /* 
+  /*
   Return Crm configuration settings.
 
   @returns {Object}
@@ -56,27 +56,33 @@ select xt.install_js('XM','crm','crm', $$
     qry = plv8.execute(sql);
 
     while(colors.length) {
-      ret[colors.pop()] = qry.pop().color;        
+      ret[colors.pop()] = qry.pop().color;
     }
 
-    ret = XT.extend(ret, data.retrieveMetrics(keys));
-    
-    return JSON.stringify(ret);
+    ret = XT.extend(data.retrieveMetrics(keys), ret);
+
+    return ret;
   }
 
-  /* 
+  /*
   Update CRM configuration settings. Only valid options as defined in the array
   XM.Crm.options will be processed.
 
    @param {Object} settings
    @returns {Boolean}
   */
-  XM.Crm.commitSettings = function(settings) {
-    var sql, options = XM.Crm.options.slice(0),
+  XM.Crm.commitSettings = function(patches) {
+    var sql, settings, options = XM.Crm.options.slice(0),
         data = Object.create(XT.Data), metrics = {};
 
     /* check privileges */
     if(!data.checkPrivilege('ConfigureCRM')) throw new Error('Access Denied');
+
+    /* Compose our commit settings by applying the patch to what we already have */
+    settings = XM.Crm.settings();
+    if (!XT.jsonpatch.apply(settings, patches)) {
+      plv8.elog(NOTICE, 'Malformed patch document');
+    }
 
     /* update numbers */
     if(settings['NextCRMAccountNumber']) {
@@ -130,7 +136,7 @@ select xt.install_js('XM','crm','crm', $$
       var prop = options[i];
       if(settings[prop] !== undefined) metrics[prop] = settings[prop];
     }
- 
+
     return data.commitMetrics(metrics);
   }
 

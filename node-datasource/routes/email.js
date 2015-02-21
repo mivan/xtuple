@@ -6,6 +6,8 @@ regexp:true, undef:true, strict:true, trailing:true, white:true */
   "use strict";
 
   /**
+    @name Email
+    @class Email
     Defines the email route. Anyone with appropriate permissions can use this
     to easily send emails out of the node layer.
    */
@@ -25,11 +27,10 @@ regexp:true, undef:true, strict:true, trailing:true, white:true */
           X.log("Email error", error);
           res.send({isError: true, message: "Error emailing"});
         } else {
-          res.send({message: "email success"});
+          res.send({message: "Email success"});
         }
       };
 
-    //res.header("Access-Control-Allow-Origin", "*"); // XXX temp until migration
     X.smtpTransport.sendMail(mailContent, callback);
   };
 }());

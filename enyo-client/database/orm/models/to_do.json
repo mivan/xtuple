@@ -3,9 +3,11 @@
     "context": "xtuple",
     "nameSpace": "XM",
     "type": "ToDo",
-    "table": "todoitem",
-    "lockable": true,
+    "table": "xt.todoiteminfo",
     "idSequenceName": "todoitem_todoitem_id_seq",
+    "isRest": true,
+    "lockable": true,
+    "lockTable": "todoitem",
     "comment": "ToDo Map",
     "privileges": {
       "all": {
@@ -23,6 +25,15 @@
           "owner.username",
           "assignedTo.username"
         ]
+      },
+      "attribute": {
+        "owner": {
+          "create": "EditOwner",
+          "update": "EditOwner"
+        },
+        "assignedTo": {
+          "update": "ReassignToDoItems"
+        }
       }
     },
     "properties": [
@@ -35,10 +46,19 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "todoitem_name"
+          "column": "todoitem_name",
+          "required": true
         }
       },
       {
@@ -72,6 +92,13 @@
         }
       },
       {
+        "name": "statusProxy",
+        "attr": {
+          "type": "String",
+          "column": "status_proxy"
+        }
+      },
+      {
         "name": "isActive",
         "attr": {
           "type": "Boolean",
@@ -88,7 +115,7 @@
       {
         "name": "dueDate",
         "attr": {
-          "type": "Date",
+          "type": "DueDate",
           "column": "todoitem_due_date",
           "required": true
         }
@@ -145,7 +172,7 @@
           "isNested": true,
           "type": "ToDoAlarm",
           "column": "todoitem_id",
-          "inverse": "to_do"
+          "inverse": "toDo"
         }
       },
       {
@@ -154,7 +181,7 @@
           "isNested": true,
           "type": "ToDoComment",
           "column": "todoitem_id",
-          "inverse": "to_do"
+          "inverse": "toDo"
         }
       },
       {
@@ -212,12 +239,10 @@
         }
       }
     ],
-    "isSystem": true,
-    "sourceCode": "TODO",
-    "extensions": []
+    "isSystem": true
   },
   {
-    "context": "crm",
+    "context": "xtuple",
     "nameSpace": "XM",
     "type": "ToDoAccount",
     "table": "xt.doc",
@@ -238,6 +263,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -308,6 +341,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "number",
         "attr": {
           "type": "String",
@@ -317,7 +358,7 @@
       {
         "name": "sourceType",
         "attr": {
-          "type": "Number",
+          "type": "String",
           "column": "alarm_source",
           "value": "TODO"
         }
@@ -420,6 +461,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -453,7 +502,8 @@
         "name": "isPublic",
         "attr": {
           "type": "Boolean",
-          "column": "comment_public"
+          "column": "comment_public",
+          "value": true
         }
       },
       {
@@ -496,6 +546,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -565,6 +623,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -611,6 +677,7 @@
     "nameSpace": "XM",
     "type": "ToDoRelation",
     "table": "xt.todoiteminfo",
+    "isRest": true,
     "comment": "Todo Relation Map",
     "privileges": {
       "all": {
@@ -640,6 +707,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "name",
         "attr": {
           "type": "String",
@@ -656,15 +731,15 @@
       {
         "name": "dueDate",
         "attr": {
-          "type": "Date",
+          "type": "DueDate",
           "column": "todoitem_due_date"
         }
       },
       {
         "name": "contact",
         "attr": {
-          "type": "Number",
-          "column": "todoitem_cntct_id"
+          "type": "String",
+          "column": "cntct_number"
         }
       },
       {
@@ -702,8 +777,8 @@
       {
         "name": "account",
         "attr": {
-          "type": "Number",
-          "column": "todoitem_crmacct_id"
+          "type": "String",
+          "column": "crmacct_number"
         }
       },
       {
@@ -729,6 +804,7 @@
     "nameSpace": "XM",
     "type": "ToDoListItem",
     "table": "xt.todoiteminfo",
+    "isRest": true,
     "comment": "Todo List Item Map",
     "privileges": {
       "all": {
@@ -755,6 +831,14 @@
           "type": "Number",
           "column": "todoitem_id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -803,7 +887,7 @@
       {
         "name": "dueDate",
         "attr": {
-          "type": "Date",
+          "type": "DueDate",
           "column": "todoitem_due_date"
         }
       },
@@ -876,6 +960,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -939,6 +1031,14 @@
           "type": "Number",
           "column": "recur_id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {
@@ -1020,6 +1120,14 @@
         }
       },
       {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
+        }
+      },
+      {
         "name": "sourceType",
         "attr": {
           "type": "String",
@@ -1083,6 +1191,14 @@
           "type": "Number",
           "column": "id",
           "isPrimaryKey": true
+        }
+      },
+      {
+        "name": "uuid",
+        "attr": {
+          "type": "String",
+          "column": "obj_uuid",
+          "isNaturalKey": true
         }
       },
       {

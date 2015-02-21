@@ -1,31 +1,31 @@
-drop view if exists xt.doc cascade;
+select xt.create_view('xt.doc', $$
 
-create or replace view xt.doc as 
-
-   select
-    docass_id as id,
-    docass_source_type as source_type,
-    docass_source_id as source_id,
-    docass_target_type as target_type,
-    docass_target_id as target_id,
-    docass_purpose as purpose
-   from docass
-   union all
+   select  
+    docass_id as id,  
+    docass_source_type as source_type,  
+    docass_source_id as source_id,  
+    docass_target_type as target_type,  
+    docass_target_id as target_id,  
+    docass_purpose as purpose,  
+    obj_uuid  
+   from docass  
+   union all  
    -- (inverse)
-   select
-    docass_id as id,
-    docass_target_type as source_type,
-    docass_target_id as source_id,
-    docass_source_type target_type,
-    docass_source_id as target_id,
-    case 
-     when docass_purpose = 'A' then 'C'
-     when docass_purpose = 'C' then 'A'
-     else docass_purpose
-    end as purpose
-   from public.docass;
+   select  
+    docass_id as id,  
+    docass_target_type as source_type,  
+    docass_target_id as source_id,  
+    docass_source_type target_type,  
+    docass_source_id as target_id,  
+    case   
+     when docass_purpose = 'A' then 'C'  
+     when docass_purpose = 'C' then 'A'  
+     else docass_purpose  
+    end as purpose,  
+    obj_uuid  
+   from public.docass; ;
 
-grant all on table xt.doc to xtrole;
+$$, false);
 
 -- insert rules
 
@@ -38,14 +38,16 @@ insert into public.docass (
   docass_source_type,
   docass_target_id,
   docass_target_type,
-  docass_purpose )
+  docass_purpose,
+  obj_uuid )
 values (
   new.id,
   new.source_id,
   new.source_type,
   new.target_id,
   new.target_type,
-  new.purpose );
+  new.purpose,
+  new.obj_uuid );
   
 -- update rule
 

@@ -1,5 +1,5 @@
-/*jshint indent:2, curly:true eqeqeq:true, immed:true, latedef:true,
-newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true
+/*jshint indent:2, curly:true, eqeqeq:true, immed:true, latedef:true,
+newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true,
 white:true*/
 /*global XT:true, XM:true, Backbone:true, _:true, console:true */
 
@@ -10,6 +10,52 @@ white:true*/
     Mixin for item classes
   */
   XM.ItemMixin = {
+
+    /**
+      Deprecated. Use `formatItemType`.
+    */
+    getItemTypeString: function () {
+      return this.formatItemType();
+    },
+
+    /**
+    Returns item type as a localized string.
+
+    @returns {String}
+    */
+    formatItemType: function () {
+      var K = XM.Item,
+        itemType = this.get('itemType');
+      switch (itemType)
+      {
+      case K.PURCHASED:
+        return '_purchased'.loc();
+      case K.MANUFACTURED:
+        return '_manufactured'.loc();
+      case K.PHANTOM:
+        return '_phantom'.loc();
+      case K.COSTING:
+        return '_costing'.loc();
+      case K.REFERENCE:
+        return '_reference'.loc();
+      case K.PLANNING:
+        return '_planning'.loc();
+      case K.OUTSIDE_PROCESS:
+        return '_outsideProcess'.loc();
+      case K.TOOLING:
+        return '_tooling'.loc();
+      case K.KIT:
+        return '_kit'.loc();
+      case K.BREEDER:
+        return '_breeder'.loc();
+      case K.CO_PRODUCT:
+        return '_coProduct'.loc();
+      case K.BY_PRODUCT:
+        return '_byProduct'.loc();
+      }
+      return '_error'.loc();
+    },
+
     /**
       Requests on array of material issue units from the server.
 
@@ -46,6 +92,7 @@ white:true*/
       @returns {Object} Receiver
     */
     taxType: function (taxZone, options) {
+      options = options ? options : {};
       var params = [this.id, taxZone ? taxZone.id : null];
       this.dispatch("XM.Item", "taxType", params, options);
       return this;
@@ -118,6 +165,46 @@ white:true*/
   /**
     @class
 
+    @extends XM.Model
+  */
+  XM.ItemGroup = XM.Model.extend({
+    /** @scope XM.ItemGroup.prototype */
+
+    recordType: 'XM.ItemGroup'
+
+  });
+
+  /**
+    @class
+
+    @extends XM.Info
+  */
+  XM.ItemGroupRelation = XM.Info.extend({
+    /** @scope XM.ItemGroupRelation.prototype */
+
+    recordType: 'XM.ItemGroupRelation',
+
+    editableModel: "XM.ItemGroup"
+
+  });
+
+  /**
+    @class
+
+    @extends XM.Model
+  */
+  XM.ItemGroupItem = XM.Model.extend({
+    /** @scope XM.ItemGroupItem.prototype */
+
+    recordType: 'XM.ItemGroupItem',
+
+    parentKey: "itemGroup"
+
+  });
+
+  /**
+    @class
+
     @extends XM.Document
   */
   XM.ProductCategory = XM.Document.extend({
@@ -129,18 +216,6 @@ white:true*/
 
     documentKey: 'code'
 
-  });
-
-  /**
-    @instance
-
-    Dummy product category for setting -1 values.
-  */
-  XM.emptyProductCategory = new XM.ProductCategory({
-    /** @scope XM.emptyProductCategory */
-    id: -1,
-    code: 'EMPTY',
-    description: 'Use for indicating no product category'
   });
 
   /**
@@ -157,13 +232,17 @@ white:true*/
 
     defaults: {
       isItemWeight: false
-    },
-
-    requiredAttributes: [
-      "isItemWeight"
-    ]
+    }
 
   });
+
+  /** @private */
+  var _isSoldDidChange = function () {
+    var isNotSold = !(this.get('isSold') || false);
+    this.setReadOnly('productCategory', isNotSold);
+    this.setReadOnly('priceUnit', isNotSold);
+    this.setReadOnly('listPrice', isNotSold);
+  };
 
   /**
     @class
@@ -184,46 +263,120 @@ white:true*/
         isActive: true,
         isFractional: false,
         isSold: true,
+        itemType: XM.Item.PURCHASED,
         listPrice: 0,
-        productCategory: XM.emptyProductCategory
+        isExclusive: false
       };
     },
-
-    requiredAttributes: [
-      "classCode",
-      "inventoryUnit",
-      "isActive",
-      "isFractional",
-      "isSold",
-      "listPrice",
-      "priceUnit",
-      "productCategory"
-    ],
 
     // ..........................................................
     // METHODS
     //
 
-    initialize: function () {
-      XM.Document.prototype.initialize.apply(this, arguments);
+    bindEvents: function () {
+      XM.Document.prototype.bindEvents.apply(this, arguments);
       this.on('change:inventoryUnit', this.inventoryUnitDidChange);
       this.on('change:isSold', this.isSoldDidChange);
-      this.on('statusChange', this.isSoldDidChange);
+      this.on('change:itemType', this.itemTypeDidChange);
     },
 
     inventoryUnitDidChange: function (model, value, options) {
-      if (this.isNotReady()) { return; }
       if (value) { this.set('priceUnit', value); }
     },
 
     isSoldDidChange: function () {
-      var K = XM.Model,
-        isNotSold = !(this.get('isSold') || false);
-      if (this.getStatus() & K.READY) {
-        this.setReadOnly('productCategory', isNotSold);
-        this.setReadOnly('priceUnit', isNotSold);
-        this.setReadOnly('listPrice', isNotSold);
+      if (!(this.get('isSold') || false)) {
+        this.unset('productCategory');
+        this.set('listPrice', 0);
       }
+      _isSoldDidChange.apply(this);
+    },
+
+    itemTypeDidChange: function () {
+      var K = XM.Item,
+        itemType = this.get("itemType"),
+        pickList = false,
+        sold = false,
+        weight = false,
+        config = false,
+        purchased = false,
+        freight   = false;
+      this.setReadOnly("configured");
+      switch (itemType)
+      {
+      case K.PURCHASED:
+        pickList = true;
+        sold = true;
+        weight = true;
+        purchased = true;
+        freight = true;
+        break;
+      case K.MANUFACTURED:
+        pickList = true;
+        sold = true;
+        weight = true;
+        config = true;
+        purchased = true;
+        freight  = true;
+        break;
+      case K.BREEDER:
+        purchased = true;
+        freight  = true;
+        break;
+      case K.CO_PRODUCT:
+        pickList = true;
+        sold = true;
+        weight = true;
+        freight = true;
+        break;
+      case K.BY_PRODUCT:
+        pickList = true;
+        sold = true;
+        weight = true;
+        freight  = true;
+        break;
+      case K.REFERENCE:
+        sold = true;
+        weight = true;
+        freight  = true;
+        config   = true;
+        break;
+      case K.TOOLING:
+        pickList = true;
+        weight = true;
+        freight = true;
+        purchased = true;
+        sold = true;
+        break;
+      case K.OUTSIDE_PROCESS:
+        purchased = true;
+        freight  = true;
+        break;
+      case K.KIT:
+        sold = true;
+        weight   = true;
+        this.set("isFractional", false);
+      }
+      this.setReadOnly("isFractional", itemType === K.KIT);
+      //TODO: Set unit conversions read only if kit
+
+      this.setReadOnly("isConfigured", !config);
+      if (!config) { this.set("isConfigured", false); }
+
+      this.set("isPicklist", pickList);
+      this.setReadOnly("isPicklist", !pickList);
+
+      this.set("isSold", sold);
+
+      this.setReadOnly("productWeight", !weight);
+      this.setReadOnly("packageWeight", !weight);
+
+      this.setReadOnly("freightClass", !freight);
+
+      // TODO: if not purchased or privs, set sources to read only
+      // privs = ViewItemSources or MaintainItemSources
+
+      // TODO: Check inventory situation if changing to non-inventory type
     },
 
     statusDidChange: function () {
@@ -231,21 +384,149 @@ white:true*/
       if (this.getStatus() === K.READY_CLEAN) {
         this.setReadOnly('number');
         this.setReadOnly('inventoryUnit');
+        _isSoldDidChange.apply(this);
       }
     },
 
-    validateSave: function () {
+    validate: function () {
       var isSold = this.get('isSold'),
         productCategory = this.get('productCategory');
-      if (isSold && (productCategory.id || -1) === -1) {
+      if (isSold && !productCategory) {
         return XT.Error.clone('xt2005');
       }
+      return XM.Document.prototype.validate.apply(this, arguments);
     }
 
   });
 
   // Add in item mixin
   XM.Item = XM.Item.extend(XM.ItemMixin);
+
+
+  _.extend(XM.Item, {
+    /** @scope XM.Item */
+
+    /**
+      Reference item.
+
+      @static
+      @constant
+      @type String
+      @default R
+    */
+    REFERENCE: 'R',
+
+    /**
+      Manufactured item.
+
+      @static
+      @constant
+      @type String
+      @default M
+    */
+    MANUFACTURED: 'M',
+
+    /**
+      Purchased item
+
+      @static
+      @constant
+      @type String
+      @default P
+    */
+    PURCHASED: 'P',
+
+    /**
+      Tooling item.
+
+      @static
+      @constant
+      @type String
+      @default T
+    */
+    TOOLING: 'T',
+
+    /**
+      Phantom item.
+
+      @static
+      @constant
+      @type String
+      @default F
+    */
+    PHANTOM: 'F',
+
+    /**
+      Costing item.
+
+      @static
+      @constant
+      @type String
+      @default S
+    */
+    COSTING: 'S',
+
+    /**
+      Outside process item.
+
+      @static
+      @constant
+      @type String
+      @default O
+    */
+    OUTSIDE_PROCESS: 'O',
+
+    /**
+      Planning item.
+
+      @static
+      @constant
+      @type String
+      @default L
+    */
+    PLANNING: 'L',
+
+    /**
+      Kit item.
+
+      @static
+      @constant
+      @type String
+      @default K
+    */
+    KIT: 'K',
+
+    /**
+      Outside process item.
+
+      @static
+      @constant
+      @type String
+      @default O
+    */
+    BREEDER: 'B',
+
+    /**
+      Co-product.
+
+      @static
+      @constant
+      @type String
+      @default C
+    */
+    CO_PRODUCT: 'C',
+
+    /**
+      By-product.
+
+      @static
+      @constant
+      @type String
+      @default Y
+    */
+    BY_PRODUCT: 'Y'
+
+  });
 
   /**
     @class
@@ -261,6 +542,8 @@ white:true*/
 
   });
 
+  XM.ItemListItem = XM.ItemListItem.extend(XM.ItemMixin);
+
   /**
     @class
 
@@ -269,7 +552,9 @@ white:true*/
   XM.ItemListItemCharacteristic = XM.CharacteristicAssignment.extend({
     /** @scope XM.ItemListItmeCharacteristic.prototype */
 
-    recordType: 'XM.ItemListItemCharacteristic'
+    recordType: 'XM.ItemListItemCharacteristic',
+
+    which: "isItems"
 
   });
 
@@ -295,7 +580,74 @@ white:true*/
   XM.ItemCharacteristic = XM.CharacteristicAssignment.extend({
     /** @scope XM.ItemCharacteristic.prototype */
 
-    recordType: 'XM.ItemCharacteristic'
+    recordType: 'XM.ItemCharacteristic',
+
+    which: 'isItems'
+
+  });
+
+  /**
+    @class
+
+    @extends XM.Model
+  */
+  XM.ItemItemSiteRelation = XM.Model.extend({
+    /** @scope XM.ItemItemSiteRelation.prototype */
+
+    recordType: 'XM.ItemItemSiteRelation',
+
+    editableModel: 'XM.ItemSite'
+
+  });
+
+  /**
+    @class
+
+    @extends XM.Model
+  */
+  XM.ItemAlias = XM.Model.extend({
+    /** @scope XM.ItemAlias.prototype */
+
+    recordType: 'XM.ItemAlias',
+
+    defaults: {
+      useDescription: false
+    },
+
+    bindEvents: function () {
+      XM.Model.prototype.bindEvents.apply(this, arguments);
+      this.on('change:useDescription', this.useDescriptionDidChange);
+
+      this.useDescriptionDidChange();
+    },
+
+    useDescriptionDidChange: function () {
+      var noDescription = !this.get("useDescription");
+
+      // clear out the description if we don't use it
+      if (noDescription) {
+        this.set({
+          description1: "",
+          description2: ""
+        });
+      }
+      this.setReadOnly(
+        ["description1", "description2"],
+        noDescription
+      );
+    }
+
+  });
+
+  /**
+    @class
+
+    @extends XM.Model
+  */
+  XM.ItemRelationAlias = XM.Model.extend({
+    /** @scope XM.ItemRelationAlias.prototype */
+
+    recordType: 'XM.ItemRelationAlias',
 
   });
 
@@ -396,7 +748,9 @@ white:true*/
   XM.ItemRelationCharacteristic = XM.CharacteristicAssignment.extend({
     /** @scope XM.ItemRelationCharacteristic.prototype */
 
-    recordType: 'XM.ItemRelationCharacteristic'
+    recordType: 'XM.ItemRelationCharacteristic',
+
+    which: 'isItems'
 
   });
 
@@ -425,6 +779,18 @@ white:true*/
    /** @scope XM.FreightClassCollection.prototype */
 
     model: XM.FreightClass
+
+  });
+
+  /**
+   @class
+
+   @extends XM.Collection
+  */
+  XM.ItemGroupRelationCollection = XM.Collection.extend({
+   /** @scope XM.ItemGroupRelationCollection.prototype */
+
+    model: XM.ItemGroupRelation
 
   });
 
@@ -473,6 +839,18 @@ white:true*/
     /** @scope XM.ItemRelationCollection.prototype */
 
     model: XM.ItemRelation
+
+  });
+
+  /**
+    @class
+
+    @extends XM.Collection
+  */
+  XM.ItemItemSiteRelationCollection = XM.Collection.extend({
+    /** @scope XM.ItemItemSiteRelationCollection.prototype */
+
+    model: XM.ItemItemSiteRelation
 
   });
 

@@ -1,27 +1,31 @@
-create or replace function xt.add_priv(name text, descrip text, label text, groop text, context text, 
-    module text, grant_admin boolean) returns boolean volatile as $$
+drop function if exists xt.add_priv(text, text, text, text);
+
+create or replace function xt.add_priv(name text, descrip text, module text, groop text) returns boolean volatile as $$
 
   var sqlCount = "select count(*) as count from public.priv where priv_name = $1;",
     sqlId = "select nextval('public.priv_priv_id_seq') as sequence;",
-    sqlInsertPublic = "insert into public.priv (priv_id, priv_name, priv_module, priv_descrip) values ($1, $2, $3, $4)", 
-    sqlInsertXT = "insert into xt.priv (priv_id, priv_name, priv_module, priv_descrip, priv_label, priv_group, priv_context) values ($1, $2, $3, $4, $5, $6, $7)", 
-    sqlGrant = "insert into public.usrpriv (usrpriv_priv_id, usrpriv_username) values ($1, $2);",
+    sqlInsert = "insert into public.priv (priv_id, priv_name, priv_module, priv_descrip) values ($1, $2, $3, $4)",
+    sqlGrantToAdmin = "select xt.grant_role_priv('ADMIN', $1, $2)",
     count = plv8.execute(sqlCount, [ name ])[0].count,
     nextId;
 
-    if(count > 0) {
-      return false;
-    }
+  if(count > 0) {
+    /* Grant this priv to the 'ADMIN' role by default. */
+    plv8.execute(sqlGrantToAdmin, [module, name]);
 
-    nextId = plv8.execute(sqlId)[0].sequence;
+    return false;
+  }
 
-    plv8.execute(sqlInsertPublic, [nextId, name, module, descrip]);
-    plv8.execute(sqlInsertXT, [nextId, name, module, descrip, label, groop, context]);
+  nextId = plv8.execute(sqlId)[0].sequence;
 
-    if(grant_admin) {
-      plv8.execute(sqlGrant, [nextId, 'admin']);
-    }
+  /* groop is a placeholder until we add a group column in xt.privinfo */
+  /* groop is used to segment the assignment box */
+  /* module is the name of the extension. was used to filter the assignment box, but doesn't do that any more */
+  plv8.execute(sqlInsert, [nextId, name, module, descrip]);
 
+  /* Grant this priv to the 'ADMIN' role by default. */
+  plv8.execute(sqlGrantToAdmin, [module, name]);
 
-    return true;
+  return true;
+
 $$ language plv8;

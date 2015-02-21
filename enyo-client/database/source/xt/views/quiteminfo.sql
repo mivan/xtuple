@@ -1,21 +1,16 @@
-drop view if exists xt.quiteminfo cascade;
-
-create or replace view xt.quiteminfo as
-
-  select quitem.*,
-    xt.quote_line_base_price(quitem) as base_price,
-    xt.quote_line_list_cost_markup(quitem) as list_cost_markup,
-    xt.quote_line_list_price(quitem) as list_price,
-    xt.quote_line_list_price_discount(quitem) as list_price_discount,
-    xt.quote_line_customer_discount(quitem) as cust_discount,
-    xt.quote_line_extended_price(quitem) as ext_price,
-    xt.quote_line_profit(quitem) as profit,
-    xt.quote_line_tax(quitem) as tax
-  from quitem
-    left join item on quitem_item_id=item_id;
-          
-revoke all on xt.quiteminfo from public;
-grant all on table xt.quiteminfo to group xtrole;
+select xt.create_view('xt.quiteminfo', $$
+  select quitem.*,  
+    xt.quote_line_base_price(quitem) as base_price,  
+    xt.quote_line_markup(quitem) as markup,  
+    xt.quote_line_list_price(quitem) as list_price,  
+    xt.quote_line_list_price_discount(quitem) as list_price_discount,  
+    xt.quote_line_customer_discount(quitem) as cust_discount,  
+    xt.quote_line_extended_price(quitem) as ext_price,  
+    xt.quote_line_margin(quitem) as margin,  
+    xt.quote_line_tax(quitem) as tax  
+  from quitem  
+    left join item on quitem_item_id=item_id; ;
+$$, false);
 
 create or replace rule "_INSERT" as on insert to xt.quiteminfo do instead
 
@@ -44,37 +39,38 @@ insert into quitem (
   quitem_itemsrc_id,
   quitem_pricemode,
   quitem_order_warehous_id,
-  quitem_item_id
+  quitem_item_id,
+  obj_uuid
 ) select
   new.quitem_id,
   new.quitem_quhead_id,
   new.quitem_linenumber,
-  new.quitem_itemsite_id,
+  itemsite_id,
   new.quitem_scheddate,
   new.quitem_qtyord,
-  stdcost(item_id),
+  coalesce(new.quitem_unitcost, itemcost(itemsite_id)),
   new.quitem_price,
   new.quitem_custprice,
   new.quitem_memo,
   new.quitem_custpn,
-  new.quitem_createorder,
-  new.quitem_prcost,
-  new.quitem_imported,
+  coalesce(new.quitem_createorder, false),
+  coalesce(new.quitem_prcost,0),
+  coalesce(new.quitem_imported, false),
   new.quitem_qty_uom_id,
   new.quitem_qty_invuomratio,
   new.quitem_price_uom_id,
   new.quitem_price_invuomratio,
   new.quitem_promdate,
   new.quitem_taxtype_id,
-  new.quitem_dropship,
+  coalesce(new.quitem_dropship, false),
   new.quitem_itemsrc_id,
-  new.quitem_pricemode,
-  warehous_id,
-  item_id
+  coalesce(new.quitem_pricemode, 'D'),
+  new.quitem_order_warehous_id,
+  new.quitem_item_id,
+  new.obj_uuid
 from itemsite
-  join item on item_id=itemsite_item_id
-  join whsinfo on warehous_id=itemsite_warehous_id
-where itemsite_id=new.quitem_itemsite_id;
+where itemsite_item_id=new.quitem_item_id
+  and itemsite_warehous_id=new.quitem_order_warehous_id;
 
 create or replace rule "_UPDATE" as on update to xt.quiteminfo do instead
 
@@ -99,7 +95,8 @@ update quitem set
   quitem_taxtype_id=new.quitem_taxtype_id,
   quitem_dropship=new.quitem_dropship,
   quitem_itemsrc_id=new.quitem_itemsrc_id,
-  quitem_pricemode=new.quitem_pricemode
+  quitem_pricemode=new.quitem_pricemode,
+  obj_uuid=new.obj_uuid 
 where quitem_id = old.quitem_id;
 
 create or replace rule "_DELETE" as on delete to xt.quiteminfo do instead

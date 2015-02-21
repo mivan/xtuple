@@ -1,5 +1,5 @@
-/*jshint indent:2, curly:true eqeqeq:true, immed:true, latedef:true,
-newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true
+/*jshint indent:2, curly:true, eqeqeq:true, immed:true, latedef:true,
+newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true,
 white:true*/
 /*global XT:true, XM:true, io:true, Backbone:true, _:true, console:true, enyo:true */
 
@@ -79,7 +79,7 @@ white:true*/
       @default 2
     */
     EXTENDED_PRICE_SCALE: 2,
-    
+
     /**
       System precision scale for unit conversion ratios.
 
@@ -111,6 +111,16 @@ white:true*/
     WEIGHT_SCALE: 2,
 
     /**
+      System precision scale for hours.
+
+      @static
+      @constant
+      @type Number
+      @default 2
+    */
+    HOURS_SCALE: 2,
+
+    /**
       Maximum length of the history array
 
       @static
@@ -120,7 +130,7 @@ white:true*/
      */
     HISTORY_MAX_LENGTH: 20,
 
-    HELP_URL_ROOT: "http://www.xtuple.org/faq/xtuple-mobile/",
+    HELP_URL_ROOT: "https://www.xtuple.org/faq/xtuple-mobile/",
 
     extensions: {},
 
@@ -157,7 +167,7 @@ white:true*/
       this.history.unshift({
         modelType: model.recordType,
         modelId: model.get(model.idAttribute),
-        modelName: model.getValue(model.nameAttribute),
+        modelName: model.getValue(model.nameAttribute) || model.get(model.idAttribute),
         workspaceType: workspaceType
       });
 
@@ -169,9 +179,6 @@ white:true*/
         this.history = this.history.slice(0, XT.HISTORY_MAX_LENGTH);
       }
 
-
-
-
       if (callback) {
         callback(this.history);
       }
@@ -179,10 +186,35 @@ white:true*/
 
     baseCurrency: function () {
       if (baseCurr) { return baseCurr; }
-      baseCurr = _.find(XM.currencies.models, function (curr) {
+      baseCurr = XM.currencies ? _.find(XM.currencies.models, function (curr) {
         return curr.get('isBase');
-      });
+      }) : false;
+      
       return baseCurr;
+    },
+
+    /**
+      Returns the default site if profiled, otherwise returns
+      the first alpha active selling site
+    */
+    defaultSite: function () {
+      var preferredSite = XT.session.preferences.get("PreferredWarehouse"),
+        foundSite;
+
+      if (preferredSite) {
+        foundSite = _.find(XM.siteRelations.models, function (site) {
+          return site.get("code") === preferredSite;
+        });
+      }
+
+      if (!foundSite) {
+        // either there is no preference or the preference is miswired somehow
+        foundSite = _.find(XM.siteRelations.models, function (site) {
+          return site.get("isActive");
+        });
+      }
+
+      return foundSite;
     },
 
     /**
@@ -191,48 +223,48 @@ white:true*/
     getHistory: function () {
       return this.history;
     },
-    
+
     toMoney: function (value) {
       return XT.math.round(value, XT.MONEY_SCALE);
     },
-    
+
     toQuantity: function (value) {
       return XT.math.round(value, XT.QTY_SCALE);
     },
-    
+
     toQuantityPer: function (value) {
       return XT.math.round(value, XT.QTY_PER_SCALE);
     },
-    
+
     toCost: function (value) {
       return XT.math.round(value, XT.COST_SCALE);
     },
-    
+
     toSalesPrice: function (value) {
       return XT.math.round(value, XT.SALES_PRICE_SCALE);
     },
-    
+
     toPurchasePrice: function (value) {
       return XT.math.round(value, XT.PURCHASE_PRICE_SCALE);
     },
-    
+
     toExtendedPrice: function (value) {
       return XT.math.round(value, XT.EXTENDED_PRICE_SCALE);
     },
-    
+
     toUnitRatio: function (value) {
       return XT.math.round(value, XT.UNIT_RATIO_SCALE);
     },
-    
+
     toPercent: function (value) {
       // Models store percent as decimal, so add two
       return XT.math.round(value, XT.PERCENT_SCALE + 2);
     },
-    
+
     toWeight: function (value) {
       return XT.math.round(value, XT.WEIGHT_SCALE);
     }
-    
+
   });
 
 }());

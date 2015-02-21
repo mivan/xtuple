@@ -1,5 +1,5 @@
 select xt.install_js('XM','Address','xtuple', $$
-  /* Copyright (c) 1999-2011 by OpenMFG LLC, d/b/a xTuple. 
+  /* Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
      See www.xm.ple.com/CPAL for the full text of the software license. */
   
   XM.Address = {};
@@ -14,7 +14,7 @@ select xt.install_js('XM','Address','xtuple', $$
   */
   XM.Address.findExisting = function(address) {
     var resp,
-        sql = "select addr_id as id "
+        sql = "select addr_number as id "
             + "from addr "
             + "where ((coalesce(upper(addr_line1),'') = coalesce(upper($1),'')) "
             + "and (coalesce(upper(addr_line2),'') = coalesce(upper($2),'')) "
@@ -38,7 +38,8 @@ select xt.install_js('XM','Address','xtuple', $$
   @returns {Number}
   */
   XM.Address.useCount = function(id) {
-    return plv8.execute('select addrUseCount($1) as result', [id])[0].result;
+    var resp = plv8.execute('select addrUseCount(addr_id) as result from addr where addr_number = $1;', [id])[0];
+    return resp ? resp.result : 0;
   }
 
 $$ );

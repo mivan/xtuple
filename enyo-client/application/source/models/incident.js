@@ -1,5 +1,5 @@
-/*jshint indent:2, curly:true eqeqeq:true, immed:true, latedef:true,
-newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true
+/*jshint indent:2, curly:true, eqeqeq:true, immed:true, latedef:true,
+newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true,
 white:true*/
 /*global Globalize:true, XT:true, XM:true, Backbone:true, _:true, console:true */
 
@@ -23,10 +23,6 @@ white:true*/
     defaults: {
       order: 0
     },
-
-    requiredAttributes: [
-      "order"
-    ],
 
     orderAttribute: {
       orderBy: [{
@@ -54,10 +50,6 @@ white:true*/
       order: 0
     },
 
-    requiredAttributes: [
-      "order"
-    ],
-
     orderAttribute: {
       orderBy: [{
         attribute: "order"
@@ -82,10 +74,6 @@ white:true*/
     defaults: {
       order: 0
     },
-
-    requiredAttributes: [
-      "order"
-    ],
 
     orderAttribute: {
       orderBy: [{
@@ -154,120 +142,46 @@ white:true*/
 
     numberPolicy: XM.Document.AUTO_NUMBER,
 
-    keyIsString: false,
-
     defaults: function () {
       return {
         owner: XM.currentUser,
         status: XM.Incident.NEW,
-        isPublic: XT.session.getSettings().get("IncidentPublicDefault")
+        isPublic: XT.session.getSettings().get("IncidentPublicDefault"),
+        created: new Date()
       };
     },
-
-    requiredAttributes: [
-      "account",
-      "category",
-      "contact",
-      "description",
-      "status"
-    ],
 
     // ..........................................................
     // METHODS
     //
 
-    initialize: function () {
-      XM.Document.prototype.initialize.apply(this, arguments);
+    bindEvents: function () {
+      XM.Document.prototype.bindEvents.apply(this, arguments);
       this.on('change:assignedTo', this.assignedToDidChange);
     },
 
     assignedToDidChange: function (model, value, options) {
-      if (this.isNotReady()) { return; }
-      if (value) { this.set('status', XM.Incident.ASSIGNED); }
+      if (value && this.get("status") !== XM.Incident.RESOLVED && this.get("status") !== XM.Incident.CLOSED) {
+        this.set('status', XM.Incident.ASSIGNED);
+      }
     },
 
-    validateSave: function () {
+    validate: function () {
       var K = XM.Incident;
       if (this.get('status') === K.ASSIGNED && !this.get('assignedTo')) {
         return XT.Error.clone('xt2001');
       }
-    },
-
-    save: function (key, value, options) {
-      // Handle both `"key", value` and `{key: value}` -style arguments.
-      if (_.isObject(key) || _.isEmpty(key)) {
-        options = value;
-      }
-      options = options ? _.clone(options) : {};
-
-      var success = options.success,
-        status = this.getStatus(),
-        statusString = this.getIncidentStatusString() ? this.getIncidentStatusString().toUpperCase() : undefined,
-        isNotUpdated = _.size(this.prime) === 0,
-        newComment = _.find(this.get('comments').models, function (comment) {
-          return comment.getStatus() === XM.Model.READY_NEW;
-        });
-
-      options.success = function (model, resp, options) {
-        var profile = model.getValue("category.emailProfile"),
-          formattedContent = {},
-          emailOptions = {error: function () {
-            XT.log("Error sending email with incident details");
-          }},
-          format = function (str) {
-            str = str || "";
-            var parser = /\{([^}]+)\}/g, // Finds curly braces
-              tokens,
-              attr;
-            tokens = str.match(parser);
-            _.each(tokens, function (token) {
-              attr = token.slice(1, token.indexOf('}'));
-              str = str.replace(token, model.getValue(attr));
-            });
-            return str;
-          };
-
-        if (profile && profile.attributes) {
-          // this profile model has pretty much exactly the right key/value pairs so
-          // we can pass it straight to node. We do want to perform the "format" transform
-          // on all of the values on the object.
-          _.each(profile.attributes, function (value, key, list) {
-            if (typeof value === 'string') {
-              formattedContent[key] = format(value);
-            }
-          });
-
-          XT.dataSource.sendEmail(formattedContent, emailOptions);
-        } // else there's no email profile profiled
-
-        if (success) { success(model, resp, options); }
-      };
-
-      // Set change text
-      if (status === XM.Model.READY_NEW && this.get('status') !== 'N') {
-        this._lastChange = "_incidentCreatedStatus".loc()
-                                                   .replace("{status}", statusString);
-      } else if (status === XM.Model.READY_NEW) {
-        this._lastChange = "_incidentCreated".loc();
-      } else if (this.original('status') !== this.get('status')) {
-        this._lastChange = "_incidentChangedStatus".loc()
-                                                   .replace("{status}", statusString);
-      } else if (newComment && isNotUpdated) {
-        this._lastChange = "_incidentNewComment".loc();
-      } else {
-        this._lastChange = "_incidentUpdated".loc();
-      }
-      this._lastChange += ":";
-
-      // Handle both `"key", value` and `{key: value}` -style arguments.
-      if (_.isObject(key) || _.isEmpty(key)) {
-        value = options;
-      }
-
-      XM.Document.prototype.save.call(this, key, value, options);
+      return XM.Document.prototype.validate.apply(this, arguments);
     }
 
+  });
 
+  // Add support for sending email
+  XM.Incident = XM.Incident.extend(XM.EmailSendMixin);
+  XM.Incident = XM.Incident.extend({
+    emailDocumentName: "_incident".loc(),
+    emailProfileAttribute: "category.emailProfile",
+    emailStatusMethod: "getIncidentStatusString"
   });
 
   _.extend(XM.Incident, {
@@ -341,31 +255,6 @@ white:true*/
   // email-relevant mixin
   XM.Incident = XM.Incident.extend({
 
-    getChangeString: function () {
-      return this._lastChange;
-    },
-
-    getLastCommentString: function () {
-      var comments = this.get('comments'),
-        comment,
-        ret = "";
-      if (comments.length) {
-        // Sort by date descending and take first
-        comments.comparator = function (a, b) {
-          var aval = a.get('created'),
-            bval = b.get('created');
-          return XT.date.compare(bval, aval);
-        };
-        comments.sort();
-        comment = comments.models[0];
-        ret = "_latestComment".loc() +
-              " (" + comment.get('createdBy') + ")" +
-              "\n\n" +
-              comment.get('text');
-      }
-      return ret;
-    },
-
     getHistoryString: function () {
       var history = this.get('history'),
         ret = "",
@@ -404,7 +293,15 @@ white:true*/
 
     recordType: 'XM.IncidentComment',
 
-    sourceName: 'INCDT'
+    sourceName: 'INCDT',
+
+    defaults: function () {
+      var result = XM.Comment.prototype.defaults.apply(this, arguments),
+        publicDefault = XT.session.getSettings().get('IncidentPublicDefault');
+
+      result.isPublic = publicDefault || false;
+      return result;
+    }
 
   });
 
@@ -416,7 +313,9 @@ white:true*/
   XM.IncidentCharacteristic = XM.CharacteristicAssignment.extend({
     /** @scope XM.IncidentCharacteristic.prototype */
 
-    recordType: 'XM.IncidentCharacteristic'
+    recordType: 'XM.IncidentCharacteristic',
+
+    which: 'isIncidents'
 
   });
 
@@ -589,7 +488,7 @@ white:true*/
   /**
     @class
 
-    @extends XM.Model
+    @extends XM.Document
   */
   XM.IncidentEmailProfile = XM.Document.extend(
     /** @scope XM.IncidentEmailProfile.prototype */ {

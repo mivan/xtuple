@@ -1,35 +1,43 @@
 create or replace function xt.usrpref_did_change() returns trigger as $$
-/* Copyright (c) 1999-2011 by OpenMFG LLC, d/b/a xTuple. 
+/* Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple.
    See www.xm.ple.com/CPAL for the full text of the software license. */
 
- var sql = 'update xt.useracct set {col} = $1 where useracct_username = $2';
+return (function () {
 
- /* Avoid recursive behavior by only updating from one side */
- if (!XT.UserPreferencesUpdating) {
-   XT.UserPreferencesUpdating = true;
-   switch (NEW.usrpref_name)
-   {
-   case 'active':
-     plv8.execute(sql.replace("{col}", "useracct_active"), [NEW.usrpref_value === 't', NEW.usrpref_username]);
+  if (typeof XT === 'undefined') { 
+    plv8.execute("select xt.js_init();"); 
+  }
+
+ var sql = "update xt.usrlite set usr_{name} = $1 where usr_username = $2",
+   val = NEW.usrpref_value,
+   name;
+
+ /* If the prefence is related to a user account, update our "lite" table */
+ switch (NEW.usrpref_name)
+ {
+   case "propername":
+   case "active":
+   case "email":
+   case "agent":
+     name = NEW.usrpref_name;
      break;
-   case 'DisableExportContents':
-     plv8.execute(sql.replace("{col}", "useracct_disable_export"), [NEW.usrpref_value === 't', NEW.usrpref_username]);
-     break;
-   case 'propername':
-     plv8.execute(sql.replace("{col}", "useracct_propername"), [NEW.usrpref_value, NEW.usrpref_username]);
-     break;
-   case 'email':
-     plv8.execute(sql.replace("{col}", "useracct_email"), [NEW.usrpref_value, NEW.usrpref_username]);
-     break
-   case 'initials':
-     plv8.execute(sql.replace("{col}", "useracct_initials"), [NEW.usrpref_value, NEW.usrpref_username]);
-     break;
-   case 'locale_id':
-     plv8.execute(sql.replace("{col}", "useracct_locale_id"), [NEW.usrpref_value - 0, NEW.usrpref_username]);
-     break;
-   }
-   XT.UserPreferencesUpdating = false;
+   case "DisableExportContents":
+     name = "disable_export"; 
  }
+
+ if (NEW.usrpref_name === 'active' ||
+     NEW.usrpref_name === 'agent' ||
+     NEW.usrpref_name === 'DisableExportContents') {
+   val = val === 't' ? true : false; 
+ }
+
+ if (name) {
+   sql = sql.replace("{name}", name); 
+   plv8.execute(sql, [ val, NEW.usrpref_username]);
+ }
+ 
  return NEW;
+
+}());
 
 $$ language plv8;

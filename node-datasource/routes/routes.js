@@ -25,59 +25,80 @@ regexp:true, undef:true, strict:true, trailing:true, white:true */
     // is a function that returns another function, and express allows routes to
     // be defined in such a way as to chain these types of functions together in an array.
     ensureLogin = require('connect-ensure-login').ensureLoggedIn(logoutPath),
+    app = require('./app'),
     auth = require('./auth'),
-    changePassword = require('./changePassword'),
+    authorizeNet = require('./authorize-net'),
+    changePassword = require('./change_password'),
+    clientCode = require('./client_code'),
     email = require('./email'),
     exxport = require('./export'),
-    extensions = require('./extensions'),
     data = require('./data'),
-    dataFromKey = require('./dataFromKey'),
     file = require('./file'),
-    maintenance = require('./maintenance'),
+    generateReport = require('./generate_report'),
+    generateOauthKey = require('./generate_oauth_key'),
+    installExtension = require('./install_extension'),
+    locale = require('./locale'),
+    passport = require('passport'),
     redirector = require('./redirector'),
-    report = require('./report'),
-    resetPassword = require('./resetPassword'),
-    syncUser = require('./syncUser');
+    recover = require('./recover'),
+    restDiscovery = require('./restDiscovery'),
+    restRouter = require('./restRouter'),
+    revokeOauthToken = require('./revoke_oauth_token'),
+    vcfExport = require('./vcfExport');
 
   //
   // Authentication-related routes
   //
+  exports.app = [ensureLogin, app.serveApp];
+  exports.debug = [ensureLogin, app.serveDebug];
   exports.login = auth.login;
   exports.loginForm = auth.loginForm;
   exports.logout = auth.logout;
   exports.scope = auth.scope;
   exports.scopeForm = auth.scopeForm;
 
+  exports.forgotPassword = recover.forgotPasswordForm;
+  exports.recoverPassword = recover.recoverPassword;
+  exports.verifyRecoverPassword = recover.verifyRecoverPassword;
+  exports.resetRecoveredPassword = recover.resetRecoveredPassword;
   //
   // Data-passthrough routes
   //
+  exports.queryDatabase = data.queryDatabase;
+  exports.delete = [ensureLogin, data.delete];
+  exports.get = [ensureLogin, data.get];
+  exports.patch = [ensureLogin, data.patch];
+  exports.post = [ensureLogin, data.post];
+
   //
-  exports.commit = [ensureLogin, data.commit];
-  exports.commitEngine = data.commitEngine;
-  exports.fetch = [ensureLogin, data.fetch];
-  exports.fetchEngine = data.fetchEngine;
-  exports.dispatch = [ensureLogin, data.dispatch];
-  exports.dispatchEngine = data.dispatchEngine;
-  exports.retrieve = [ensureLogin, data.retrieve];
-  exports.retrieveEngine = data.retrieveEngine;
+  // REST API Routes
+  exports.restDiscoveryList = [
+    restDiscovery.list
+  ];
+  exports.restDiscoveryGetRest = [
+    restDiscovery.getRest
+  ];
+  exports.restRouter = [
+    passport.authenticate('bearer', { session: false }),
+    restRouter.router
+  ];
 
   //
   // Custom routes
   //
+  exports.creditCard = [ensureLogin, authorizeNet.transact];
   exports.changePassword = [ensureLogin, changePassword.changePassword];
-  exports.dataFromKey = dataFromKey.dataFromKey; // don't authenticate
+  exports.clientCode = [ensureLogin, clientCode.clientCode];
   exports.email = [ensureLogin, email.email];
   exports.exxport = [ensureLogin, exxport.exxport];
-  exports.extensions = [ensureLogin, extensions.extensions];
   exports.file = [ensureLogin, file.file];
-  // the maintenance route as accessible by the app has login restrictions.
-  exports.maintenance = [ensureLogin, maintenance.maintenance];
-  // the maintenance route as accessible through the unexposed server has
-  // no login restrictions. This is for ease of serverside scripting.
-  exports.maintenanceLocalhost = maintenance.maintenance;
+  exports.generateOauthKey = [ensureLogin, generateOauthKey.generateKey];
+  exports.generateReport = [ensureLogin, generateReport.generateReport];
+  exports.installExtension = [ensureLogin, installExtension.installExtension];
+  exports.locale = [ensureLogin, locale.locale];
   exports.redirect = redirector.redirect;
-  exports.report = [ensureLogin, report.report];
-  exports.resetPassword = [ensureLogin, resetPassword.resetPassword];
-  exports.syncUser = [ensureLogin, syncUser.syncUser];
+  exports.resetPassword = [ensureLogin, changePassword.resetPassword];
+  exports.revokeOauthToken = [ensureLogin, revokeOauthToken.revokeToken];
+  exports.vcfExport = [ensureLogin, vcfExport.vcfExport];
 
 }());

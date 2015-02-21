@@ -1,0 +1,81 @@
+[
+  {
+    "context": "crm",
+    "nameSpace": "XM",
+    "type": "SalesOrder",
+    "table": "xt.coheadinfo",
+    "isExtension": true,
+    "comment": "Extended by Crm",
+    "relations": [
+      {
+        "column": "cohead_id",
+        "inverse": "id"
+      }
+    ],
+    "properties": [
+      {
+        "name": "opportunity",
+        "toOne": {
+          "isNested": true,
+          "type": "OpportunityRelation",
+          "column": "cohead_ophead_id"
+        }
+      },
+      {
+        "name": "opportunities",
+        "toMany": {
+          "isNested": true,
+          "type": "SalesOrderOpportunity",
+          "column": "cohead_id",
+          "inverse": "source"
+        }
+      },
+      {
+        "name": "incidents",
+        "toMany": {
+          "isNested": true,
+          "type": "SalesOrderIncident",
+          "column": "cohead_id",
+          "inverse": "source"
+        }
+      },
+      {
+        "name": "toDos",
+        "toMany": {
+          "isNested": true,
+          "type": "SalesOrderToDo",
+          "column": "cohead_id",
+          "inverse": "source"
+        }
+      }
+    ],
+    "sequence": 0,
+    "isSystem": true
+  },
+  {
+    "context": "crm",
+    "nameSpace": "XM",
+    "type": "SalesOrderListItem",
+    "table": "xt.coheadinfo",
+    "isExtension": true,
+    "comment": "Extended by Crm",
+    "relations": [
+      {
+        "column": "cohead_id",
+        "inverse": "id"
+      }
+    ],
+    "properties": [
+      {
+        "name": "opportunity",
+        "toOne": {
+          "isNested": true,
+          "type": "OpportunityRelation",
+          "column": "cohead_ophead_id"
+        }
+      }
+    ],
+    "sequence": 0,
+    "isSystem": true
+  }
+]

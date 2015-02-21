@@ -1,5 +1,5 @@
 select xt.install_js('XM','Account','xtuple', $$
-  /* Copyright (c) 1999-2011 by OpenMFG LLC, d/b/a xTuple. 
+  /* Copyright (c) 1999-2014 by OpenMFG LLC, d/b/a xTuple. 
      See www.xm.ple.com/CPAL for the full text of the software license. */
   
   XM.Account = {};
@@ -14,9 +14,13 @@ select xt.install_js('XM','Account','xtuple', $$
       /* use result.crmacct_id to get the crmacct_id column.  the result of the query will be an array so get the 1st result */
       
     var res,
-        retVal,
-        row,
-        sql = "select * from crmacct where crmacct_id = $1";
+      retVal,
+      row,
+      sql = "select crmacct_number, cust_number, prospect_number " +
+            "from crmacct " +
+            "left join custinfo on cust_id = crmacct_cust_id " +
+            "left join prospect on prospect_id = crmacct_prospect_id " +
+            " where crmacct_number = $1";
         
     res = XM.Model.findExisting("XM.Account", key, value, id);
     
@@ -26,19 +30,19 @@ select xt.install_js('XM','Account','xtuple', $$
     } else {
       row = plv8.execute(sql, [res])[0];
       retVal = {};
-      if (row.crmacct_cust_id) {
-        retVal.id = row.crmacct_cust_id;
+      if (row.cust_number) {
+        retVal.id = row.cust_number;
         retVal.type = "C";
-      } else if (row.crmacct_prospect_id) {
-        retVal.id = row.crmacct_prospect_id;
+      } else if (row.prospect_number) {
+        retVal.id = row.prospect_number;
         retVal.type = "P";
       } else {
-        retVal.id = row.crmacct_id;
+        retVal.id = row.crmacct_number;
         retVal.type = "A";
       }
     }
     
-    return JSON.stringify(retVal);
+    return retVal;
   }
 
   XM.Account.used = function(id) {
@@ -49,7 +53,7 @@ select xt.install_js('XM','Account','xtuple', $$
 	" and crmacct_taxauth_id is null" +
 	" and crmacct_vend_id is null" +
 	" and crmacct_usr_username is null) as result " +
-	"from crmacct where crmacct_id = $1",
+	"from crmacct where crmacct_number = $1",
       res = plv8.execute(sql, [id])[0].result;
      return res ? XM.Model.used('XM.Account', id) : true;
   }

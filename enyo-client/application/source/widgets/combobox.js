@@ -1,8 +1,29 @@
-/*jshint node:true, indent:2, curly:true eqeqeq:true, immed:true, latedef:true, newcap:true, noarg:true,
+/*jshint node:true, indent:2, curly:true, eqeqeq:true, immed:true,
+latedef:true, newcap:true, noarg:true,
 regexp:true, undef:true, trailing:true, white:true */
-/*global XT:true, XV:true, Globalize:true, enyo:true, _:true */
+/*global XT:true, XV:true, XM:true, Globalize:true, enyo:true, _:true */
 
 (function () {
+
+  // ..........................................................
+  // CREDIT CARD GATEWAY
+  //
+
+  enyo.kind(
+    /** @lends XV.CreditCardGatewayCombobox# */{
+    name: "XV.CreditCardGatewayCombobox",
+    kind: "XV.ComboboxWidget",
+    events: {
+      onNotify: ""
+    },
+    collection: "XM.creditCardGateways",
+    controlValueChanged: function (inSender, inEvent) {
+      if (!XM.creditCardGateways.find(function (model) { return model.id === inEvent.value; })) {
+        this.doNotify({message: "_unsupportedGateway".loc()});
+      }
+      return this.inherited(arguments);
+    }
+  });
 
   // ..........................................................
   // COUNTRY
@@ -13,9 +34,10 @@ regexp:true, undef:true, trailing:true, white:true */
     @name XV.CountryCombobox
     @extends XV.Combobox
    */
-  enyo.kind(/** @lends XV.CountryCombobox# */{
+  enyo.kind(
+    /** @lends XV.CountryCombobox# */{
     name: "XV.CountryCombobox",
-    kind: "XV.Combobox",
+    kind: "XV.ComboboxWidget",
     collection: "XM.countries"
   });
 
@@ -44,13 +66,14 @@ regexp:true, undef:true, trailing:true, white:true */
     name: "XV.QuoteLineCharacteristicCombobox",
     kind: "XV.ComboboxWidget",
     keyAttribute: "value",
-    components: [
-      {kind: "FittableColumns", name: "fittableColumns", components: [
-        {name: "label", content: "", classes: "xv-decorated-label", style: "width: 100px;"},
-        {name: "input", kind: "XV.Combobox", style: "width: 200px;"},
-        {name: "comboboxNote", classes: "xv-combobox-note"}
-      ]}
-    ],
+    create: function () {
+      this.inherited(arguments);
+      this.createComponent({
+        name: "comboboxNote",
+        container: this.$.container,
+        classes: "xv-combobox-note"
+      });
+    },
     /**
       Populate the note field
 
@@ -82,9 +105,9 @@ regexp:true, undef:true, trailing:true, white:true */
     @name XV.StateCombobox
     @extends XV.Combobox
    */
-  enyo.kind(/** @lends XV.StateCombobox# */{
+  enyo.kind({
     name: "XV.StateCombobox",
-    kind: "XV.Combobox",
+    kind: "XV.ComboboxWidget",
     collection: "XM.states",
     keyAttribute: "abbreviation",
     published: {
@@ -109,7 +132,9 @@ regexp:true, undef:true, trailing:true, white:true */
     */
     countryChanged: function () {
       var country = this.getCountry();
-      if (typeof country === 'string') {
+      if (!country) {
+        this._countryId = undefined;
+      } else if (typeof country === 'string') {
         country = _.find(XM.countries.models, function (model) {
           return model.get('name') === country;
         });
@@ -124,4 +149,24 @@ regexp:true, undef:true, trailing:true, white:true */
       this.buildList();
     }
   });
+
+  // ..........................................................
+  // UNIT
+  //
+
+  enyo.kind({
+    name: "XV.UnitCombobox",
+    kind: "XV.ComboboxWidget",
+    collection: "XM.units",
+    keyAttribute: "name",
+    showLabel: false,
+    setValue: function (value, options) {
+      if (value && value.id) {
+        this.inherited(arguments, [value.id, options]);
+      } else {
+        this.inherited(arguments);
+      }
+    }
+  });
+
 }());

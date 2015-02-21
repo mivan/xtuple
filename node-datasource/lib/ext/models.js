@@ -1,140 +1,101 @@
-/*jshint indent:2, curly:true eqeqeq:true, immed:true, latedef:true,
-newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true
+/*jshint node:true, indent:2, curly:true, eqeqeq:true, immed:true, latedef:true,
+newcap:true, noarg:true, regexp:true, undef:true, strict:true, trailing:true,
 white:true*/
-/*global XT:true, XM:true, Backbone:true, _:true */
+/*global SYS:true, XM:true, Backbone:true, _:true, X: true */
 
 (function () {
   "use strict";
 
+  var async = require("async");
+
   /**
     @class
 
-    @extends XM.Model
+    @extends XM.SimpleModel
   */
-  XM.DatabaseServer = XM.Model.extend({
-    /** @scope XM.DatabaseServer.prototype */
+  SYS.ClientCodeRelation = XM.SimpleModel.extend({
 
-    recordType: 'XM.DatabaseServer',
-
-    idAttribute: 'name',
-
-    databaseType: 'global',
-
-    autoFetchId: false
+    recordType: 'SYS.ClientCodeRelation'
 
   });
 
   /**
     @class
 
-    @extends XM.Model
+    @extends XM.SimpleModel
   */
-  XM.Datasource = XM.Model.extend({
-    /** @scope XM.Datasource.prototype */
+  SYS.ClientCode = XM.SimpleModel.extend({
 
-    recordType: 'XM.Datasource',
+    recordType: 'SYS.ClientCode'
 
-    idAttribute: 'name',
+  });
 
-    databaseType: 'global',
+  SYS.CustomerEmailProfile = XM.SimpleModel.extend({
+    recordType: 'SYS.CustomerEmailProfile'
+  });
 
-    autoFetchId: false
+  /**
+    @class
+
+    @extends XM.SimpleModel
+  */
+  SYS.Extension = XM.SimpleModel.extend({
+    recordType: 'SYS.Extension'
+  });
+
+  SYS.File = XM.SimpleModel.extend({
+    recordType: 'SYS.File'
+  });
+
+  /**
+    @class
+
+    @extends XM.SimpleModel
+  */
+  SYS.Oauth2client = XM.SimpleModel.extend({
+
+    recordType: 'SYS.Oauth2client'
 
   });
 
   /**
     @class
 
-    @extends XM.Model
+    @extends XM.SimpleModel
   */
-  XM.Extension = XM.Model.extend({
-    /** @scope XM.Extension.prototype */
+  SYS.Oauth2clientRedirs = XM.SimpleModel.extend({
 
-    recordType: 'XM.Extension',
-
-    databaseType: 'global'
+    recordType: 'SYS.Oauth2clientRedirs'
 
   });
 
   /**
     @class
 
-    @extends XM.Model
+    @extends XM.SimpleModel
   */
-  XM.Organization = XM.Model.extend({
-    /** @scope XM.Organization.prototype */
+  SYS.Oauth2token = XM.SimpleModel.extend({
 
-    recordType: 'XM.Organization',
+    recordType: 'SYS.Oauth2token'
 
-    idAttribute: 'name',
+  });
 
-    databaseType: 'global',
-
-    autoFetchId: false
-
+  SYS.ReportDefinition = XM.SimpleModel.extend({
+    recordType: 'SYS.ReportDefinition'
   });
 
   /**
     @class
 
-    @extends XM.Model
+    @extends XM.SimpleModel
   */
-  XM.OrganizationExtension = XM.Model.extend({
-    /** @scope XM.OrganizationExtension.prototype */
+  SYS.SessionStore = XM.SimpleModel.extend({
+    /** @scope SYS.SessionStore.prototype */
 
-    recordType: 'XM.OrganizationExtension',
-
-    databaseType: 'global'
-
-  });
-
-
-  /**
-    @class
-
-    @extends XM.Model
-  */
-  XM.Session = XM.Model.extend({
-    /** @scope XM.Session.prototype */
-
-    recordType: 'XM.Session',
-
-    idAttribute: 'sid',
-
-    databaseType: 'global',
-
-    autoFetchId: false
-
-  });
-
-  /**
-    @class
-
-    @extends XM.Model
-  */
-  XM.SessionOrganization = XM.Model.extend({
-    /** @scope XM.SessionOrganization.prototype */
-
-    recordType: 'XM.SessionOrganization',
-
-    databaseType: 'global'
-
-  });
-
-  /**
-    @class
-
-    @extends XM.Model
-  */
-  XM.SessionStore = XM.Model.extend({
-    /** @scope XM.SessionStore.prototype */
-
-    recordType: 'XM.SessionStore',
+    recordType: 'SYS.SessionStore',
 
     idAttribute: 'id',
 
-    databaseType: 'global',
-
     autoFetchId: false
 
   });
@@ -142,74 +103,148 @@ white:true*/
   /**
     @class
 
-    @extends XM.Model
+    @extends XM.SimpleModel
   */
-  XM.User = XM.Model.extend({
-    /** @scope XM.User.prototype */
+  SYS.User = XM.SimpleModel.extend({
+    /** @scope SYS.User.prototype */
 
-    recordType: 'XM.User',
+    recordType: 'SYS.User',
 
-    autoFetchId: false,
+    /**
+      Checks for a user privilege. Also checks all the roles that the user is a part of.
+      Necessarily async because not all the relevant data is nested.
+      Not portable to the client because of the backbone-relational-lessness
+      of the models.
+      `callback(err, result)` where result is truthy iff the user has the privilege
+    */
+    checkPrivilege: function (privName, database, callback) {
+      var privCheck = _.find(this.get("grantedPrivileges"), function (model) {
+        return model.privilege === privName;
+      });
+      if (privCheck) {
+        callback(); // the user has this privilege!
+        return;
+      }
+      // this gets a little dicey: check all the user's roles for the priv, which
+      // requires async.map
+      var roles = _.map(this.get("grantedUserAccountRoles"), function (grantedRole) {
+        return grantedRole.userAccountRole;
+      });
+      var checkRole = function (roleName, next) {
+        var role = new SYS.UserAccountRole();
+        role.fetch({
+          id: roleName,
+          username: X.options.databaseServer.user,
+          database: database,
+          success: function (roleModel, results) {
+            var rolePriv = _.find(roleModel.get("grantedPrivileges"), function (grantedPriv) {
+              return grantedPriv.privilege === privName;
+            });
+            next(null, rolePriv);
+          }
+        });
+      };
+      async.map(roles, checkRole, function (err, results) {
+        // if any of the roles give the priv, then the user has the priv
+        var result = _.reduce(results, function (memo, priv) {
+          return priv || memo;
+        }, false);
+        console.log(result);
+        if (err || !result) {
+          callback({message: "_insufficientPrivileges"});
+          return;
+        }
+        callback(); // success!
+      });
+    }
+  });
 
-    databaseType: 'global'
+  /**
+    @class
+
+    @extends XM.SimpleModel
+  */
+  SYS.UserAccountRole = XM.SimpleModel.extend({
+    /** @scope SYS.UserAccountRole.prototype */
+
+    recordType: 'SYS.UserAccountRole'
 
   });
 
   /**
     @class
 
-    @extends XM.Model
+    @extends XM.SimpleModel
   */
-  XM.UserOrganization = XM.Model.extend({
-    /** @scope XM.UserOrganization.prototype */
+  SYS.CreditCard = XM.SimpleModel.extend(/** @lends SYS.CreditCard.prototype */{
 
-    recordType: 'XM.UserOrganization',
+    recordType: 'SYS.CreditCard',
 
-    databaseType: 'global'
+    idAttribute: 'uuid'
 
   });
 
   /**
     @class
 
-    @extends XM.Model
+    @extends XM.SimpleModel
   */
-  XM.GlobalPrivilege = XM.Model.extend(/** @lends XM.GlobalPrivilege.prototype */{
+  SYS.CreditCardPayment = XM.SimpleModel.extend(/** @lends SYS.CreditCardPayment.prototype */{
 
-    recordType: 'XM.GlobalPrivilege',
+    recordType: 'SYS.CreditCardPayment',
 
-    databaseType: 'global'
+    idAttribute: "id",
+
+    autoFetchId: true
+
+  });
+
+  _.extend(SYS.CreditCardPayment, {
+
+    AUTHORIZED: "A",
+
+    CAPTURE: "C",
+
+    CHARGED: "C",
+
+    CREDIT: "R",
+
+    DECLINED: "D",
+
+    ERROR: "X",
+
+    REVERSE: "V",
+
+    VOID: "V"
+
+  });
+
+
+  /**
+    @class
+
+    @extends XM.SimpleModel
+  */
+  SYS.SalesOrderPayment = XM.SimpleModel.extend(/** @lends SYS.SalesOrderPayment.prototype */{
+
+    recordType: 'SYS.SalesOrderPayment',
+
+    idAttribute: "uuid"
 
   });
 
   /**
     @class
 
-    @extends XM.Model
+    @extends XM.SimpleModel
   */
-  XM.UserGlobalPrivilegeAssignment = XM.Model.extend(/** @lends XM.UserGlobalPrivilegeAssignment.prototype */{
+  SYS.Recover = XM.SimpleModel.extend(/** @lends SYS.Recover.prototype */{
 
-    recordType: 'XM.UserGlobalPrivilegeAssignment',
+    recordType: 'SYS.Recover',
 
-    databaseType: 'global'
+    idAttribute: 'id'
 
   });
-
-  /**
-    @class
-
-    @extends XM.Model
-  */
-  XM.BiCache = XM.Model.extend(/** @lends XM.BiCache.prototype */{
-
-    recordType: 'XM.BiCache',
-
-    databaseType: 'global',
-
-    idAttribute: 'key'
-
-  });
-
 
   // ..........................................................
   // COLLECTIONS
@@ -220,33 +255,9 @@ white:true*/
 
     @extends XM.Collection
   */
-  XM.DatabaseServerCollection = XM.Collection.extend({
-    /** @scope XM.DatabaseServerCollection.prototype */
+  SYS.ClientCodeRelationCollection = XM.Collection.extend({
 
-    model: XM.DatabaseServer
-
-  });
-
-  /**
-    @class
-
-    @extends XM.Collection
-  */
-  XM.DatasourceCollection = XM.Collection.extend({
-    /** @scope XM.DatasourceCollection.prototype */
-
-    model: XM.DatabaseServer
-  });
-
-  /**
-    @class
-
-    @extends XM.Collection
-  */
-  XM.OrganizationCollection = XM.Collection.extend({
-    /** @scope XM.OrganizationCollection.prototype */
-
-    model: XM.Organization
+    model: SYS.ClientCodeRelation
 
   });
 
@@ -255,22 +266,9 @@ white:true*/
 
     @extends XM.Collection
   */
-  XM.UserOrganizationCollection = XM.Collection.extend({
-    /** @scope XM.UserOrganizationCollection.prototype */
+  SYS.Oauth2clientCollection = XM.Collection.extend({
 
-    model: XM.UserOrganization
-
-  });
-
-  /**
-    @class
-
-    @extends XM.Collection
-  */
-  XM.SessionCollection = XM.Collection.extend({
-    /** @scope XM.SessionCollection.prototype */
-
-    model: XM.Session
+    model: SYS.Oauth2client
 
   });
 
@@ -279,10 +277,39 @@ white:true*/
 
     @extends XM.Collection
   */
-  XM.SessionStoreCollection = XM.Collection.extend({
-    /** @scope XM.SessionStoreCollection.prototype */
+  SYS.Oauth2clientRedirsCollection = XM.Collection.extend({
 
-    model: XM.SessionStore
+    model: SYS.Oauth2clientRedirs
+
+  });
+  /**
+    @class
+
+    @extends XM.Collection
+  */
+  SYS.Oauth2tokenCollection = XM.Collection.extend({
+
+    model: SYS.Oauth2token
+
+  });
+
+  SYS.ExtensionCollection = XM.Collection.extend({
+    model: SYS.Extension
+  });
+
+  SYS.FileCollection = XM.Collection.extend({
+    model: SYS.File
+  });
+
+  /**
+    @class
+
+    @extends XM.Collection
+  */
+  SYS.UserCollection = XM.Collection.extend({
+    /** @scope SYS.UserCollection.prototype */
+
+    model: SYS.User
 
   });
 
@@ -291,21 +318,16 @@ white:true*/
 
     @extends XM.Collection
   */
-  XM.UserCollection = XM.Collection.extend({
-    /** @scope XM.UserCollection.prototype */
+  SYS.RecoverCollection = XM.Collection.extend({
+    /** @scope SYS.RecoverCollection.prototype */
 
-    model: XM.User
+    model: SYS.Recover
 
   });
-  /**
-    @class
 
-    @extends XM.Collection
-  */
-  XM.BiCacheCollection = XM.Collection.extend({
-    /** @scope XM.BiCacheCollection.prototype */
+  SYS.ReportDefinitionCollection = XM.Collection.extend({
 
-    model: XM.BiCache
+    model: SYS.ReportDefinition
 
   });
 }());

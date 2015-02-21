@@ -30,9 +30,7 @@ X = {};
   X.url          = require("url");
   X.crypto       = require("crypto");
   X.bcrypt       = require("bcrypt");
-
-  X.connect      = require("connect");
-  X.pg           = require("pg").native;
+  X.pg           = require("pg");
 
   /**
    Returns the global X
@@ -69,27 +67,6 @@ X = {};
     }
 
     return _.values(obj);
-  };
-
-  X.relativeDependsPath = "";
-  /**
-    For traversing dependency package files.
-  */
-  X.depends = function () {
-    var dir = this.relativeDependsPath,
-      files = X.$A(arguments),
-      pathBeforeRecursion;
-
-    _.each(files, function (file) {
-      if (_fs.statSync(_path.join(dir, file)).isDirectory()) {
-        pathBeforeRecursion = X.relativeDependsPath;
-        X.relativeDependsPath = _path.join(dir, file);
-        X.depends("package.js");
-        X.relativeDependsPath = pathBeforeRecursion;
-      } else {
-        require(_path.join(dir, file));
-      }
-    });
   };
 
   /**
@@ -239,11 +216,6 @@ X = {};
       }
     },
 
-    kindOf: function (obj, ctor) {
-      if (X.none(obj) || !obj.constructor) return false;
-      return !! (obj.constructor === ctor);
-    },
-
     init: function () {
       var args = X.$A(arguments),
           len = args.length, i = 0, key;
@@ -321,12 +293,6 @@ X = {};
       if (wasReady) return;
       while (queue.length > 0) (queue.shift())();
       X.runQueue = null;
-
-      // now run any of the require statements...
-      required = X.required || [];
-      while (required.length) {
-        require(_path.join(X.basePath, required.shift()));
-      }
     },
 
     get: function () {
@@ -423,26 +389,11 @@ X = {};
         this.isSetup = true;
         return;
       }
-      unused = this.options = {};
-      for (name in options) {
-        if (!options.hasOwnProperty(name)) continue;
-        option = options[name];
-        if (X.typeOf(option) === X.T_FUNCTION) {
-          option(X);
-        } else {
-          if (X.typeOf(option) === X.T_HASH) {
-            for (prop in option) {
-              if (!option.hasOwnProperty(prop)) continue;
-              if (X[name]) X[name][prop] = option[prop];
-              else X.addProperties(unused, name, prop, option[prop]);
-            }
-          } else {
-            X.addProperties(X, name, option);
-          }
-        }
-      }
+
+      this.options = options;
+
       X.isSetup = true;
-      if (X.autoStart) X.didBecomeReady();
+      X.didBecomeReady();
     }
   });
 

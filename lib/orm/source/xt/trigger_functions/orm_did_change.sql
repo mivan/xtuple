@@ -1,6 +1,22 @@
 create or replace function xt.orm_did_change() returns trigger as $$
 
-  var view, views = [], i = 1, res, n;
+return (function () {
+
+  var view,
+    views = [],
+    lockTable,
+    tableName,
+    i = 1,
+    sql,
+    dropSql,
+    res,
+    n;
+
+
+  /* Don't bother updating if nothing has changed */
+  if (TG_OP === 'UPDATE' && NEW && OLD && NEW.orm_json === OLD.orm_json) {
+    return NEW;
+  }
 
   /* Validate */
   if(TG_OP === 'INSERT' || TG_OP === 'UPDATE') {
@@ -17,12 +33,17 @@ create or replace function xt.orm_did_change() returns trigger as $$
   while (n--) {
     nsp = views[n].beforeDot();
     rel = views[n].afterDot();
-    plv8.execute("drop view if exists " + nsp + "." + rel);
+    dropSql = "drop view if exists " + nsp + "." + rel;
+
+    if (DEBUG) {
+      XT.debug('xt.orm_did_change sql = ', dropSql);
+    }
+    plv8.execute(dropSql);
   }
 
-  /* Determine whether to rebuild */ 
+  /* Determine whether to rebuild */
   if(TG_OP === 'UPDATE' || TG_OP === 'DELETE') {
-    if(!OLD.orm_ext) { /* is base map */ 
+    if(!OLD.orm_ext) { /* is base map */
       if(TG_OP === 'DELETE') {
         views.splice(views.indexOf(view), 1);
         if(views.length) {
@@ -45,20 +66,40 @@ create or replace function xt.orm_did_change() returns trigger as $$
     }
   }
 
-  /* Loop through model names and create */ 
+  /* Loop through model names and create */
   if(TG_OP === 'INSERT' || TG_OP === 'UPDATE') {
     for(var i = 0; i < views.length; i++) {
       var nameSpace = views[i].beforeDot().camelize().toUpperCase(),
           type = views[i].afterDot().classify(),
-          orm = XT.Orm.fetch(nameSpace, type, true);
-          
+          options = {
+            refresh: true,
+            superUser: true
+          },
+          orm;
+      orm = XT.Orm.fetch(nameSpace, type, options);
       XT.Orm.createView(orm);
     }
   }
 
   /* Finish up */
-  if(TG_OP === 'DELETE') return OLD;
-  
+  if (TG_OP === 'DELETE') {
+    orm = JSON.parse(OLD.orm_json);
+    lockTable = orm.lockTable || orm.table;
+    tableName =  lockTable.indexOf(".") === -1 ? lockTable : lockTable.afterDot();
+    sql = 'drop trigger if exists {tableName}_did_change on {table};'
+          .replace(/{tableName}/, tableName)
+          .replace(/{table}/, lockTable);
+
+    if (DEBUG) {
+      XT.debug('xt.orm_did_change sql = ', sql);
+    }
+    plv8.execute(sql);
+
+    return OLD;
+  }
+
   return NEW;
+
+}());
 
 $$ language plv8;

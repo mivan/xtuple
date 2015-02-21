@@ -4,8 +4,9 @@
     "nameSpace": "XM",
     "type": "Priority",
     "table": "incdtpriority",
-    "lockable": true,
+    "isRest": true,
     "idSequenceName": "incdtpriority_incdtpriority_id_seq",
+    "lockable": true,
     "comment": "Priority Map",
     "privileges": {
       "all": {
@@ -28,7 +29,8 @@
         "name": "name",
         "attr": {
           "type": "String",
-          "column": "incdtpriority_name"
+          "column": "incdtpriority_name",
+          "isNaturalKey":true
         }
       },
       {
